@@ -1,0 +1,27 @@
+import Foundation
+
+struct BreedService {
+    static func loadDogBreeds() -> [String] {
+        guard let url = Bundle.main.url(forResource: "dogBreeds", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let decoded = try? JSONDecoder().decode(DogBreedResponse.self, from: data)
+        else { return [] }
+
+        return decoded.flattenedBreeds
+    }
+}
+
+extension DogBreedResponse {
+    /// Flattens the nested dog breed structure into a list of displayable strings
+    var flattenedBreeds: [String] {
+        message.flatMap { (breed, subBreeds) -> [String] in
+            if subBreeds.isEmpty {
+                return [breed.capitalized]
+            } else {
+                return subBreeds.map { "\(breed) \($0)".capitalized }
+            }
+        }.sorted()
+    }
+}
+
+
