@@ -2,12 +2,21 @@ import Foundation
 
 struct BreedService {
     static func loadDogBreeds() -> [String] {
-        guard let url = Bundle.main.url(forResource: "dogBreeds", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let decoded = try? JSONDecoder().decode(DogBreedResponse.self, from: data)
-        else { return [] }
-
-        return decoded.flattenedBreeds
+        guard let url = Bundle.main.url(forResource: "DogBreed", withExtension: "json") else {
+            print("❌ JSON file not found")
+            return []
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let decoded = try JSONDecoder().decode(DogBreedResponse.self, from: data)
+            let breeds = decoded.flattenedBreeds
+            print("✅ Loaded breeds: \(breeds)")
+            return breeds
+        } catch {
+            print("❌ Decoding error: \(error)")
+            return []
+        }
     }
 }
 

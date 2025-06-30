@@ -1,8 +1,9 @@
 import Foundation
 
-struct DogBreedResponse: Codable {
+struct DogBreedResponse: Decodable {
     let message: [String: [String]]
 }
+
 
 /// Model to decode dog breed data from Dog CEO API-style JSON
 /// The `message` dictionary contains:

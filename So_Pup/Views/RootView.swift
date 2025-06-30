@@ -1,24 +1,28 @@
-//
-//  RootView.swift
-//  So_Pup
-//
-//  Created by Mook Rattana on 24/06/2025.
-//
-
 import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var authViewModel : AuthViewModel
     
     var body: some View {
-        
-        Group {
-            if authViewModel.isLoggedIn {
-                HomeView()
-            } else {
-                RegisterView()
+        NavigationStack {
+            Group {
+                if authViewModel.isLoggedIn {
+                    if authViewModel.hasCompletedOnboarding {
+                        HomeView()
+                            .transition(.opacity)
+                    } else {
+                        OnboardingFlowView()
+                            .environmentObject(OnboardingViewModel())
+                            .transition(.opacity)
+                    }
+                } else {
+                    RegisterView()
+                        .transition(.opacity)
+                }
             }
+            .animation(.easeInOut(duration: 0.5), value: authViewModel.hasCompletedOnboarding)
         }
     }
 }
+
 

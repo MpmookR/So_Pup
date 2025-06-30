@@ -17,14 +17,39 @@ class OnboardingViewModel: ObservableObject {
     @Published var dogName = ""
     @Published var dogGender = ""
     @Published var dogSize = ""
-    @Published var dogWeight: Double = 0
     @Published var dogBreed = ""
+    @Published var mixedBreed = ""
     @Published var dogDOB = Date()
     @Published var dogIsNeutered: Bool?
     @Published var dogImages: [UIImage] = [] // up to 5
-    @Published var dogBehaviorTags: [String] = []
     @Published var dogHealthStatus: [String] = []
     
+    // dog behaviour
+    @Published var selectedPlayStyles: Set<String> = []
+    @Published var selectedPlayEnvironments: Set<String> = []
+    @Published var selectedTriggerSensitivities: Set<String> = []
+
+    @Published var customPlayStyle: String?
+    @Published var customPlayEnvironment: String?
+    @Published var customTriggerSensitivity: String?
+
+    
+
+    @Published var dogWeight: Double = 0
+    @Published var dogWeightString: String = "" {
+        // didSet runs immediately after a property’s value changes
+        /// it wont run during initialization, only when new value assigned
+        didSet {
+            let sanitized = dogWeightString.replacingOccurrences(of: ",", with: ".")
+            dogWeight = Double(sanitized) ?? 0
+        }
+    }
+
+    init() {
+        dogWeightString = dogWeight == 0 ? "" : String(format: "%.2f", dogWeight)
+    }
+
+
     // health
     @Published var fleaTreatmentDate: Date?
     @Published var wormingTreatmentDate: Date?
@@ -67,21 +92,24 @@ class OnboardingViewModel: ObservableObject {
         
         // 3. Prepare DogBehavior (for dogs >= 12 weeks)
         let behaviorData: DogBehavior? = mode == "social" ? DogBehavior(
-            playStyles: dogBehaviorTags,
-            preferredPlayEnvironments: [], // Add real value
-            triggersAndSensitivities: [],  // Add real value
-            customPlayStyle: nil,          // Optional support for "Other"
-            customPlayEnvironment: nil,
-            customTriggerSensitivity: nil
+            playStyles: Array(selectedPlayStyles),
+            preferredPlayEnvironments: Array(selectedPlayEnvironments),
+            triggersAndSensitivities: Array(selectedTriggerSensitivities),
+            customPlayStyle: customPlayStyle,
+            customPlayEnvironment: customPlayEnvironment,
+            customTriggerSensitivity: customTriggerSensitivity
         ) : nil
+
         
+        let finalBreed = mixedBreed.isEmpty ? dogBreed : mixedBreed
+
         // 4. Create DogModel
         let dog = DogModel(
             name: dogName,
             gender: parsedGender,
             size: parsedSize,
             weight: dogWeight,
-            breed: dogBreed,
+            breed: finalBreed,
             dob: dogDOB,
             isNeutered: dogIsNeutered,
             behavior: behaviorData,

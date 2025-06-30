@@ -19,11 +19,11 @@ enum DogProfileStatus: String, CaseIterable, Identifiable, Codable {
 }
 
 
-enum UserGenderOption: String, CaseIterable, Identifiable {
-    case woman = "woman/girl"
-    case man = "man/boy"
-    case preferNotToSay = "prefer not to say"
+enum UserGenderOption: String, CaseIterable, Identifiable, Codable{
+    case woman = "female"
+    case man = "male"
     case other = "other"
+    case preferNotToSay = "prefer not to say"
 
     var id: String { rawValue } //Uses the case’s string value as the unique ID
 }
@@ -51,9 +51,6 @@ let languageOptions: [String] = [
     "Chinese", "Japanese", "Korean", "Hindi", "Thai", "Vietnamese",
     "Indonesian", "Malay", "Filipino", "Bengali", "Tamil", "Urdu",
     "Turkish", "Farsi",
-
-    // Other
-    "Other"
 ]
 
 enum SizeOption: String, CaseIterable, Identifiable, Codable {
@@ -88,7 +85,6 @@ let playStyleOptions: [String] = [
     "Overexcited",         // Becomes overly energetic or hyper quickly
     "Explorer",            // More interested in sniffing or roaming
     "Observer",            // Watches other dogs play but rarely joins in
-    "Other"                // User-defined
 ]
 
 let playEnvironmentOptions: [String] = [
@@ -98,7 +94,6 @@ let playEnvironmentOptions: [String] = [
     "Daycare",             // Supervised group setting
     "Indoor",              // Inside home or indoor facility
     "Flexible",            // Comfortable in any environment
-    "Other"
 ]
 
 let triggerSensitivityOptions: [String] = [
@@ -109,7 +104,6 @@ let triggerSensitivityOptions: [String] = [
     "Wheelchairs",         // May react to assistive devices
     "Vacuum cleaners",     // Loud appliances or cleaning tools
     "Strangers",           // Nervous around unknown people
-    "Other"
 ]
 
 //MARK: mock up data

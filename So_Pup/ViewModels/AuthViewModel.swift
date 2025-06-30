@@ -1,30 +1,30 @@
 import Foundation
 import UIKit
 import FirebaseAuth
+import FirebaseFirestore
 
 //@MainActor tells compiler to run all code in this class on the main thread to safely update UI-related
 @MainActor
 class AuthViewModel: ObservableObject {
     
-    /// Email entered by the user (bound to TextField)
     @Published var email = ""
-    
-    /// Password entered by the user (bound to SecureField)
     @Published var password = ""
-    
-    /// Holds error message for UI display
     @Published var errorMessage: String?
-    
-    /// Indicates whether a sign-in or sign-up process is ongoing
     @Published var isLoading = false
-    
-    /// Indicates whether the user is successfully authenticated
     @Published var isLoggedIn = false
+    @Published var hasCompletedOnboarding = false
+    
+    private let db = Firestore.firestore()
     
     // MARK: - Initializer
     /// Initialize login state based on current Firebase session
     init (){
         self.isLoggedIn = Auth.auth().currentUser != nil
+        if isLoggedIn {
+            Task {
+                await fetchOnboardingStatus()
+            }
+        }
     }
     
     // MARK: - Authentication Methods
@@ -35,6 +35,8 @@ class AuthViewModel: ObservableObject {
         do {
             _ = try await FirebaseService.shared.signIn(email: email, password: password)
             isLoggedIn = true
+            await fetchOnboardingStatus()
+
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -48,6 +50,7 @@ class AuthViewModel: ObservableObject {
         do {
             _ = try await FirebaseService.shared.signUp(email: email, password: password)
             isLoggedIn = true
+            hasCompletedOnboarding = false
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -60,19 +63,22 @@ class AuthViewModel: ObservableObject {
     ///   - nonce: The original un-hashed nonce used in the request
     func handleAppleSignIn(idToken: String, nonce: String) async {
         print("🟢 handleAppleSignIn started")
-
+        
         isLoading = true
         errorMessage = nil
         do {
             let result = try await FirebaseService.shared.signInWithApple(idToken: idToken, nonce: nonce)
             
             print("✅ Firebase Apple Sign-In success: \(result.user.uid)")
-           
+            
             isLoggedIn = true
+            // check the onboarding status
+            await fetchOnboardingStatus()
+
         } catch {
             
             print("❌ Firebase Apple Sign-In failed: \(error.localizedDescription)")
-
+            
             errorMessage = error.localizedDescription
         }
         isLoading = false
@@ -84,11 +90,30 @@ class AuthViewModel: ObservableObject {
         do {
             let result = try await FirebaseService.shared.signInWithGoogle(presenting: presenting)
             isLoggedIn = true
+            await fetchOnboardingStatus()
         } catch {
             errorMessage = error.localizedDescription
         }
         isLoading = false
     }
+    
+    private func fetchOnboardingStatus() async {
+        /// mock
+        self.hasCompletedOnboarding = false
+/// pull real data
+//            guard let uid = Auth.auth().currentUser?.uid else { return }
+//            do {
+//                let doc = try await db.collection("users").document(uid).getDocument()
+//                if let data = doc.data(), let status = data["hasCompletedOnboarding"] as? Bool {
+//                    self.hasCompletedOnboarding = status
+//                } else {
+//                    self.hasCompletedOnboarding = false
+//                }
+//            } catch {
+//                print("❌ Error fetching onboarding status: \(error.localizedDescription)")
+//                self.hasCompletedOnboarding = false
+//            }
+        }
     
     
     /// Signs out the current user
