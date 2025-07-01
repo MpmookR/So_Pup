@@ -38,6 +38,7 @@ struct BehaviourSelection: View {
                     ForEach(Array(selectedOptions.subtracting(options)), id: \.self) { custom in
                         optionButton(custom)
                     }
+                }
 
                     if showingAddField {
                         TextField("Custom...", text: $newTag, onCommit: addCustomTag)
@@ -57,7 +58,6 @@ struct BehaviourSelection: View {
                                 .background(Color.socialAccent)
                                 .cornerRadius(99)
                         }
-                    }
                 }
             }
         }
@@ -102,14 +102,14 @@ struct BehaviourSelection: View {
     }
 }
 
-struct BehaviourSelection_Previews: PreviewProvider {
-    static var previews: some View {
-        BehaviourSelection(
-            title: "Play Style",
-            options: ["Chaser", "Wrestler", "Tugger", "Mouthy"],
-            selectedOptions: .constant(["Chaser"]),
-            showToggle: true
-        )
-        .padding()
-    }
-}
+//struct BehaviourSelection_Previews: PreviewProvider {
+//    static var previews: some View {
+//        BehaviourSelection(
+//            title: "Play Style",
+//            options: ["Chaser", "Wrestler", "Tugger", "Mouthy"],
+//            selectedOptions: .constant(["Chaser"]),
+//            showToggle: true
+//        )
+//        .padding()
+//    }
+//}

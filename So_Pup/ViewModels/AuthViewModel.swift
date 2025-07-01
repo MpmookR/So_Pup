@@ -74,6 +74,7 @@ class AuthViewModel: ObservableObject {
             isLoggedIn = true
             // check the onboarding status
             await fetchOnboardingStatus()
+            print("hasCompletedOnboarding inside handleAppleSignIn: \(self.hasCompletedOnboarding)")
 
         } catch {
             
@@ -98,22 +99,23 @@ class AuthViewModel: ObservableObject {
     }
     
     private func fetchOnboardingStatus() async {
-        /// mock
-        self.hasCompletedOnboarding = false
-/// pull real data
-//            guard let uid = Auth.auth().currentUser?.uid else { return }
-//            do {
-//                let doc = try await db.collection("users").document(uid).getDocument()
-//                if let data = doc.data(), let status = data["hasCompletedOnboarding"] as? Bool {
-//                    self.hasCompletedOnboarding = status
-//                } else {
-//                    self.hasCompletedOnboarding = false
-//                }
-//            } catch {
-//                print("❌ Error fetching onboarding status: \(error.localizedDescription)")
-//                self.hasCompletedOnboarding = false
-//            }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        do {
+            let doc = try await db.collection("users").document(uid).getDocument()
+            if let data = doc.data(), let status = data["hasCompletedOnboarding"] as? Bool {
+                self.hasCompletedOnboarding = status
+            } else {
+                self.hasCompletedOnboarding = false
+            }
+        } catch {
+            print("❌ Error fetching onboarding status: \(error.localizedDescription)")
+            self.hasCompletedOnboarding = false
         }
+        
+        print("hasCompletedOnboarding after fetch: \(self.hasCompletedOnboarding)")
+
+    }
+
     
     
     /// Signs out the current user

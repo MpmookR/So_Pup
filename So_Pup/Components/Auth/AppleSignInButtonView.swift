@@ -3,6 +3,8 @@ import AuthenticationServices
 
 struct AppleSignInButtonView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var currentNonce: String?
+
     
     var body: some View {
         SignInWithAppleButton(
@@ -38,6 +40,5 @@ struct AppleSignInButtonView: View {
         .signInWithAppleButtonStyle(.black)
         .frame(height: 44)
         .cornerRadius(21)
-//        .padding(.horizontal, 20)
     }
 }

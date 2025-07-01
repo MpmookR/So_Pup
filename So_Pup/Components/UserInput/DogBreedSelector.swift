@@ -11,13 +11,13 @@ struct DogBreedSelector: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Toggle("Is your dog a mixed breed?", isOn: $isMixedBreed)
-                .toggleStyle(SwitchToggleStyle(tint: .orange))
+                .toggleStyle(SwitchToggleStyle(tint: Color.socialBorder))
 
             if isMixedBreed {
                 TextField("Enter mixed breed", text: $customMixedBreed)
                     .padding()
-                    .background(Color.yellow.opacity(0.2))
-                    .cornerRadius(10)
+                    .background(Color.socialAccent)
+                    .cornerRadius(99)
             } else {
                 Button {
                     showBreedPicker = true

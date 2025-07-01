@@ -5,13 +5,13 @@ struct LoadingToHomeView: View {
     @State private var navigateToHome = false
 
     var body: some View {
-        NavigationStack {
-            ZStack {
+
+        ZStack {
                 Color.socialLight
                     .ignoresSafeArea()
 
                 VStack(spacing: 20) {
-                    Image("socialLoading") // replace with your asset name
+                    Image("socialLoading") 
                         .resizable()
                         .scaledToFit()
                         .frame(width: 160, height: 160)
@@ -32,7 +32,7 @@ struct LoadingToHomeView: View {
             .navigationDestination(isPresented: $navigateToHome) {
                 HomeView()
             }
-        }
+        
     }
 }
 

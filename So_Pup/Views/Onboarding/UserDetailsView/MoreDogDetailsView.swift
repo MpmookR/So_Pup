@@ -10,6 +10,8 @@ struct MoreDogDetailsView: View {
     @State private var showAlert = false
     
     var onNext: () -> Void
+    var onBack: () -> Void
+
     
     var body: some View {
         ZStack {
@@ -20,9 +22,7 @@ struct MoreDogDetailsView: View {
                 OnboardingProgressBar(
                     progress: 0.5,
                     showBackButton: true,
-                    onBack: {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    onBack: onBack
                 )
                 
                 // Title
@@ -34,7 +34,7 @@ struct MoreDogDetailsView: View {
                 // input field
                 VStack {
                     SelectableField(
-                        label: "Puppy weight?",
+                        label: "Puppy weight",
                         value: $onboardingVM.dogWeightString,
                         placeholder: "enter weight in Kilograms",
                         filled: true
@@ -42,7 +42,7 @@ struct MoreDogDetailsView: View {
                     .keyboardType(.decimalPad)
                     
                     SelectableField(
-                        label: "Puppy Size?",
+                        label: "Puppy Size",
                         value: $onboardingVM.dogSize,
                         placeholder: "Select size",
                         filled: true,
