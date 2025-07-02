@@ -7,6 +7,8 @@ struct NeuteredStatusView: View {
     @State private var showAlert = false
 
     var onNext: () -> Void
+    var onBack: () -> Void
+
 
     var body: some View {
         ZStack {
@@ -17,9 +19,7 @@ struct NeuteredStatusView: View {
                 OnboardingProgressBar(
                     progress: 0.9,
                     showBackButton: true,
-                    onBack: {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    onBack: onBack
                 )
 
                 Spacer()
@@ -83,7 +83,7 @@ struct NeuteredStatusView: View {
 
 #Preview {
     NavigationStack {
-        NeuteredStatusView(onNext: {})
+        NeuteredStatusView(onNext: {}, onBack: {})
             .environmentObject(OnboardingViewModel())
     }
 }

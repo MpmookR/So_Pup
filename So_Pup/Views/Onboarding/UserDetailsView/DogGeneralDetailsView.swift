@@ -5,6 +5,8 @@ struct DogGeneralDetailsView: View {
     @Environment(\.presentationMode) var presentationMode
 
     @State private var showImagePicker = false
+    @State private var selectedImage: UIImage?
+
     @State private var selectedGender: DogGenderOption?
     @State private var showGenderOptions = false
     
@@ -14,6 +16,7 @@ struct DogGeneralDetailsView: View {
     @State private var showAlert = false
     
     var onNext: () -> Void
+    var onBack: () -> Void
 
     var body: some View {
         ZStack {
@@ -24,9 +27,7 @@ struct DogGeneralDetailsView: View {
                 OnboardingProgressBar(
                     progress: 0.3,
                     showBackButton: true,
-                    onBack: {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    onBack: onBack
                 )
                 
                 // Title
@@ -43,7 +44,7 @@ struct DogGeneralDetailsView: View {
                     Button(action: {
                         showImagePicker = true
                     }) {
-                        if let image = onboardingVM.profilePicture {
+                        if let image = onboardingVM.dogImages.first {
                             Image(uiImage: image)
                                 .resizable()
                                 .scaledToFill()
@@ -70,7 +71,7 @@ struct DogGeneralDetailsView: View {
                     )
                     
                     SelectableField(
-                        label: "What is your puppy gender?",
+                        label: "what is your puppy gender?",
                         value: $onboardingVM.dogGender,
                         placeholder: "Select gender",
                         filled: true,
@@ -98,19 +99,6 @@ struct DogGeneralDetailsView: View {
                 
                 Spacer()
                 
-                // Next button
-//                NextButton(
-//                    title: "Next",
-//                    isDisabled: onboardingVM.dogName.isEmpty || onboardingVM.dogGender.isEmpty || onboardingVM.dogBreed.isEmpty,
-//                    backgroundColor: .socialButton,
-//                    foregroundColor: .socialText,
-//                    onTap: {
-//                        showAlert = true
-//                    }
-//                )
-//                .alert("Please fill in all required fields.", isPresented: $showAlert) {
-//                    Button("OK", role: .cancel) {}
-//                }
                 NextButton(
                     title: "Next",
                     isDisabled: onboardingVM.dogName.isEmpty || onboardingVM.dogGender.isEmpty || onboardingVM.dogBreed.isEmpty,
@@ -129,8 +117,14 @@ struct DogGeneralDetailsView: View {
             }
             .padding()
             .sheet(isPresented: $showImagePicker) {
-                ImagePicker(image: $onboardingVM.profilePicture)
+                ImagePicker(image: $selectedImage)
             }
+            .onChange(of: selectedImage) { oldValue, newValue in
+                if let image = newValue {
+                    onboardingVM.dogImages = [image]
+                }
+            }
+
         }
         .onTapGesture {
             hideKeyboard()

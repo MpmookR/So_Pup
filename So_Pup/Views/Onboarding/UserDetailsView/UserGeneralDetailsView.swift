@@ -11,8 +11,9 @@ struct UserGeneralDetailsView: View {
     @State private var showAlert = false
     
     var onNext: () -> Void
+    var onBack: () -> Void
 
-    
+
     var body: some View {
         ZStack {
             Color.socialLight
@@ -22,9 +23,7 @@ struct UserGeneralDetailsView: View {
                 OnboardingProgressBar(
                     progress: 0.1,
                     showBackButton: true,
-                    onBack: {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    onBack: onBack
                 )
                 
                 // Title
@@ -61,14 +60,14 @@ struct UserGeneralDetailsView: View {
                 // input field
                 VStack {
                     SelectableField(
-                        label: "What is your name?",
+                        label: "what is your name?",
                         value: $onboardingVM.name,
                         placeholder: "eg; Michael Scott",
                         filled: true
                     )
                     
                     SelectableField(
-                        label: "What is your gender?",
+                        label: "what is your gender?",
                         value: $onboardingVM.gender,
                         placeholder: "Select your gender",
                         filled: true,
@@ -97,7 +96,7 @@ struct UserGeneralDetailsView: View {
                 
                 NextButton(
                     title: "Next",
-                    isDisabled: onboardingVM.name.isEmpty || onboardingVM.gender.isEmpty,
+                    isDisabled: onboardingVM.name.isEmpty || onboardingVM.languages.isEmpty || onboardingVM.gender.isEmpty,
                     backgroundColor: .socialButton,
                     foregroundColor: .socialText,
                     onTap: {
@@ -124,7 +123,7 @@ struct UserGeneralDetailsView: View {
 
 #Preview {
     NavigationStack {
-        UserGeneralDetailsView(onNext: {})
+        UserGeneralDetailsView(onNext: {}, onBack: {})
             .environmentObject(OnboardingViewModel())
     }
 }

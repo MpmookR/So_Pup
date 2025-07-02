@@ -6,8 +6,8 @@ struct BehaviourView: View {
     
     @State private var showAlert = false
     
-    
     var onNext: () -> Void
+    var onBack: () -> Void
     
     var body: some View {
         ZStack {
@@ -18,17 +18,15 @@ struct BehaviourView: View {
                 OnboardingProgressBar(
                     progress: 0.7,
                     showBackButton: true,
-                    onBack: {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+                    onBack: onBack
                 )
                 Text("Puppy's Behaviour")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .multilineTextAlignment(.leading)
                 
-                Text("Note: *You can select multiple options in each section*")
-                    .font(.subheadline)
+                Text("Note: You can select multiple options in each section")
+                    .font(.footnote)
                     .foregroundColor(.gray)
                     .italic()
                 
@@ -76,11 +74,14 @@ struct BehaviourView: View {
             }
             .padding()
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
     }
 }
 
 #Preview {
-    BehaviourView(onNext: {})
+    BehaviourView(onNext: {}, onBack: {})
         .environmentObject(OnboardingViewModel())
     
 }
