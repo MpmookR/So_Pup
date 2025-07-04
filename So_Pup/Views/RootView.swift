@@ -6,7 +6,9 @@ struct RootView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if authViewModel.isLoggedIn {
+                if authViewModel.isCheckingAuthStatus {
+                    ProgressView("Loading...")
+                } else if authViewModel.isLoggedIn {
                     if authViewModel.hasCompletedOnboarding {
                         HomeView()
                             .transition(.opacity)

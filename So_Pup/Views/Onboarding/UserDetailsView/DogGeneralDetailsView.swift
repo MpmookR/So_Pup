@@ -3,12 +3,15 @@ import SwiftUI
 struct DogGeneralDetailsView: View {
     @EnvironmentObject var onboardingVM: OnboardingViewModel
     @Environment(\.presentationMode) var presentationMode
-
+    
+    // use @State when not something the user is editing or saving | static data for display only
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage?
-
+    
     @State private var selectedGender: DogGenderOption?
     @State private var showGenderOptions = false
+    
+    @State private var dogBreeds: [String] = []
     
     @State private var selectedBreed = ""
     @State private var mixedBreed = ""
@@ -17,7 +20,7 @@ struct DogGeneralDetailsView: View {
     
     var onNext: () -> Void
     var onBack: () -> Void
-
+    
     var body: some View {
         ZStack {
             Color.socialLight
@@ -89,10 +92,11 @@ struct DogGeneralDetailsView: View {
                         }
                     }
                     
+                    // The selected breed itself is still stored in onboardingVM because that's user input data.
                     DogBreedSelector(
-                        selectedBreed: $onboardingVM.dogBreed,
-                        customMixedBreed: $mixedBreed,
-                        allBreeds: BreedService.loadDogBreeds()
+                        selectedBreed: $onboardingVM.dogBreed,  // Selected value goes into shared onboardingVM
+                        customMixedBreed: $mixedBreed,          // Optional input for custom breeds
+                        allBreeds: dogBreeds                    // The list of options to choose from
                     )
                     
                 }
@@ -112,8 +116,8 @@ struct DogGeneralDetailsView: View {
                         }
                     }
                 )
-
-
+                
+                
             }
             .padding()
             .sheet(isPresented: $showImagePicker) {
@@ -124,20 +128,31 @@ struct DogGeneralDetailsView: View {
                     onboardingVM.dogImages = [image]
                 }
             }
-
+            
         }
+        
+        .task {
+            do {
+                let breeds = try await DogBreedFirestoreService.fetchBreeds()
+                self.dogBreeds = breeds
+            } catch {
+                print("❌ Failed to load breeds: \(error)")
+            }
+        }
+                
         .onTapGesture {
             hideKeyboard()
         }
     }
 }
 
-//#Preview {
-//    NavigationStack {
-//        UserGeneralDetailsView()
-//            .environmentObject(OnboardingViewModel())
-//    }
-//}
+#Preview {
+    NavigationStack {
+        DogGeneralDetailsView(onNext: {},onBack: {})
+        .environmentObject(OnboardingViewModel())
+    }
+}
+
 
 
 

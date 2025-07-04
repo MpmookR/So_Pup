@@ -13,17 +13,15 @@ class AuthViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isLoggedIn = false
     @Published var hasCompletedOnboarding = false
+    @Published var isCheckingAuthStatus = true
     
     private let db = Firestore.firestore()
     
     // MARK: - Initializer
     /// Initialize login state based on current Firebase session
-    init (){
-        self.isLoggedIn = Auth.auth().currentUser != nil
-        if isLoggedIn {
-            Task {
-                await fetchOnboardingStatus()
-            }
+    init() {
+        Task {
+            await checkAuthStatus()
         }
     }
     
@@ -98,6 +96,16 @@ class AuthViewModel: ObservableObject {
         isLoading = false
     }
     
+    /// Signs out the current user
+    func signOut() {
+        do {
+            try FirebaseService.shared.signOut()
+            isLoggedIn = false
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
     private func fetchOnboardingStatus() async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
@@ -115,16 +123,37 @@ class AuthViewModel: ObservableObject {
         print("hasCompletedOnboarding after fetch: \(self.hasCompletedOnboarding)")
 
     }
+    
+    // Checks the current Firebase authentication status and whether the user has completed onboarding.
+    func checkAuthStatus() async {
+        isCheckingAuthStatus = true
+        defer { isCheckingAuthStatus = false } // Ensure loading state is turned off at the end
 
-    
-    
-    /// Signs out the current user
-    func signOut() {
+        // Check if a Firebase user session exists
+        guard let user = Auth.auth().currentUser else {
+            self.isLoggedIn = false 
+            return
+        }
+
+        // Reference the user's Firestore document
+        let uid = user.uid
+        let docRef = Firestore.firestore().collection("users").document(uid)
+
         do {
-            try FirebaseService.shared.signOut()
-            isLoggedIn = false
+            // Try to fetch the user's document from Firestore
+            let snapshot = try await docRef.getDocument()
+
+            self.isLoggedIn = true // Valid user session confirmed
+
+            // Check if the onboarding flag exists and assign it
+            self.hasCompletedOnboarding = snapshot.data()?["hasCompletedOnboarding"] as? Bool ?? false
+
         } catch {
-            errorMessage = error.localizedDescription
+            // If Firestore fetch fails, log error and set fallback state
+            print("❌ Error fetching onboarding status: \(error)")
+            self.isLoggedIn = false
+            self.hasCompletedOnboarding = false
         }
     }
+
 }

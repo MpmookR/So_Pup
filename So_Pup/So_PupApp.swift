@@ -6,9 +6,6 @@ import FirebaseAuth
 @main
 struct SoPupApp: App {
     
-    // Register app delegate for Firebase setup
-//    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var onboardingViewModel = OnboardingViewModel()
     
@@ -21,6 +18,11 @@ struct SoPupApp: App {
             RootView()
                 .environmentObject(authViewModel)
                 .environmentObject(onboardingViewModel)
+            
+            // Check login + onboarding status as early as possible
+                .task {
+                    await authViewModel.checkAuthStatus()
+                }
         }
     }
 }

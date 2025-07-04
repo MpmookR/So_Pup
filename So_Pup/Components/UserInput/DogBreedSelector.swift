@@ -21,6 +21,7 @@ struct DogBreedSelector: View {
             } else {
                 Button {
                     showBreedPicker = true
+                    
                 } label: {
                     HStack {
                         Text(selectedBreed.isEmpty ? "Select breed" : selectedBreed)

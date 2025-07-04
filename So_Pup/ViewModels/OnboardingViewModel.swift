@@ -5,7 +5,6 @@ import FirebaseAuth
 import FirebaseStorage
 
 ///https://firebase.google.com/docs/storage/ios/start?
-
 @MainActor
 class OnboardingViewModel: ObservableObject {
     // User
@@ -52,7 +51,6 @@ class OnboardingViewModel: ObservableObject {
         dogWeightString = dogWeight == 0 ? "" : String(format: "%.2f", dogWeight)
     }
     
-    
     // health
     @Published var fleaTreatmentDate: Date?
     @Published var wormingTreatmentDate: Date?
@@ -72,7 +70,6 @@ class OnboardingViewModel: ObservableObject {
         let db = Firestore.firestore()
         
         do {
-            
             // MARK:  initialised them here as te complier cannot process long struct
             let parsedGender = DogGenderOption(rawValue: dogGender) ?? .other
             let parsedSize = SizeOption(rawValue: dogSize) ?? .medium
@@ -106,6 +103,7 @@ class OnboardingViewModel: ObservableObject {
 
             
             // 3. Prepare DogBehavior (for dogs >= 12 weeks)
+            // save dog's behavior only for socail mode user
             let behaviorData: DogBehavior? = mode == "social" ? DogBehavior(
                 playStyles: Array(selectedPlayStyles),
                 preferredPlayEnvironments: Array(selectedPlayEnvironments),
