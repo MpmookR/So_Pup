@@ -103,11 +103,21 @@ struct UserGeneralDetailsView: View {
                         if onboardingVM.name.isEmpty || onboardingVM.gender.isEmpty {
                             showAlert = true
                         } else {
-                            onNext()
+                            Task {
+                                await onboardingVM.fetchUserLocation()
+                                onNext()
+                            }
                         }
                     }
                 )
-
+                
+                if let message = onboardingVM.locationErrorMessage {
+                    Text(message)
+                        .foregroundColor(.red)
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                }
 
             }
             .padding()

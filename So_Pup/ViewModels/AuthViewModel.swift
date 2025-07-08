@@ -48,6 +48,7 @@ class AuthViewModel: ObservableObject {
         do {
             _ = try await FirebaseService.shared.signUp(email: email, password: password)
             isLoggedIn = true
+            await fetchOnboardingStatus()
             hasCompletedOnboarding = false
         } catch {
             errorMessage = error.localizedDescription
@@ -106,6 +107,7 @@ class AuthViewModel: ObservableObject {
         }
     }
     
+    // check if the user data is in firestore
     private func fetchOnboardingStatus() async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         do {

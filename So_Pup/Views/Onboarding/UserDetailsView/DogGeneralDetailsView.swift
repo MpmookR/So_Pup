@@ -92,7 +92,6 @@ struct DogGeneralDetailsView: View {
                         }
                     }
                     
-                    // The selected breed itself is still stored in onboardingVM because that's user input data.
                     DogBreedSelector(
                         selectedBreed: $onboardingVM.dogBreed,  // Selected value goes into shared onboardingVM
                         customMixedBreed: $mixedBreed,          // Optional input for custom breeds

@@ -11,7 +11,7 @@ struct LoadingToHomeView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 20) {
-                    Image("socialLoading") 
+                    Image("socialLoading")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 160, height: 160)

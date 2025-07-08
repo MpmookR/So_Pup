@@ -15,5 +15,12 @@
 			</array>
 		</dict>
 	</array>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We use your location to help you find nearby dogs for playdates.</string>
+	
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Your location helps enable social features in your area.</string>
+	
 </dict>
 </plist>

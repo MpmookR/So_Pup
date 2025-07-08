@@ -20,8 +20,8 @@ enum DogProfileStatus: String, CaseIterable, Identifiable, Codable {
 
 
 enum UserGenderOption: String, CaseIterable, Identifiable, Codable{
-    case woman = "female"
-    case man = "male"
+    case female = "female"
+    case male = "male"
     case other = "other"
     case preferNotToSay = "prefer not to say"
 
@@ -32,7 +32,6 @@ enum UserGenderOption: String, CaseIterable, Identifiable, Codable{
 enum DogGenderOption: String, Codable, CaseIterable, Identifiable {
     case male
     case female
-    case other
     
     var id: String { rawValue }
 }
@@ -64,7 +63,7 @@ enum SizeOption: String, CaseIterable, Identifiable, Codable {
 }
 
 
-enum HealthVerificationStatus: String {
+enum HealthVerificationStatus: String, CaseIterable {
     case verified
     case unverified
     
@@ -88,29 +87,24 @@ let playStyleOptions: [String] = [
 ]
 
 let playEnvironmentOptions: [String] = [
-    "Open Fields",         // Large open spaces where dogs can run freely
-    "Enclosed Parks",      // Fenced parks for safe off-leash play
-    "Home Garden",         // Private backyard or garden
-    "Daycare",             // Supervised group setting
-    "Indoor",              // Inside home or indoor facility
-    "Flexible",            // Comfortable in any environment
+    "Open Fields",
+    "Enclosed Parks",
+    "Home Garden",
+    "Daycare",
+    "Indoor",
+    "Flexible",           
 ]
 
 let triggerSensitivityOptions: [String] = [
-    "Loud noises",         // Fireworks, thunder, shouting
-    "Sudden movements",    // Fast gestures, unpredictable motion
-    "Cats",                // Reacts to cats
-    "Bicycles",            // Chases or barks at bikes
-    "Wheelchairs",         // May react to assistive devices
-    "Vacuum cleaners",     // Loud appliances or cleaning tools
-    "Strangers",           // Nervous around unknown people
+    "Loud noises",
+    "Sudden movements",
+    "Cats",
+    "Vehicle",
+    "Wheelchairs",
+    "Vacuum cleaners",
+    "Strangers",
 ]
 
-//MARK: mock up data
-let locationOptions: [String] = [
-    "London", "Manchester", "Birmingham", "Liverpool", "Leeds",
-    "Glasgow", "Bristol", "Edinburgh", "Cardiff", "Belfast",
-    "Other"
-]
+
 
 

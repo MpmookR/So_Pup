@@ -1,59 +1,59 @@
 import SwiftUI
 
 struct HomeView: View {
-    @EnvironmentObject var onboardingVM: OnboardingViewModel
-    @EnvironmentObject var authViewModel: AuthViewModel
-
+    @State private var showFilterSheet = false
+    @State private var filterSettings = DogFilterSettings()
+    
+    // Mock data
+    let dogs: [DogModel] = [MockDogData.dog1, MockDogData.dog2, MockDogData.dog3, MockDogData.dog4]
+    let owners: [UserModel] = [MockUserData.user1, MockUserData.user2, MockUserData.user3, MockUserData.user4]
+    
     var body: some View {
-        VStack(spacing: 20) {
-            modeStatusView
-            dogAgeView
-            Spacer()
-            logoutButton
-        }
-        .padding()
-        .onAppear {
-            onboardingVM.determineMode()
-        }
-    }
+        NavigationView {
+            ScrollView {
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    
+                    // MARK: - Scrollable Banner
+                    Image("banner2")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 200)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .ignoresSafeArea(edges: .top)
+                    
+                    // MARK: - Sticky Filter Bar
+                    Section(header:
+                        ZStack {
+                            Color(.systemBackground)
+                                .frame(maxWidth: .infinity)
+                            
+                            FilterBarView(filterSettings: filterSettings) {
+                                showFilterSheet = true
+                            }
+                            .padding(.horizontal)
 
-    private var modeStatusView: some View {
-        Group {
-            if onboardingVM.mode == "puppy" {
-                Text("👶 Hi! I’m in Puppy Mode (under 12 weeks)")
-                    .font(.title)
-                    .foregroundColor(.blue)
-            } else {
-                Text("🐕 Hi! I’m in Social Mode (12 weeks and older)")
-                    .font(.title)
-                    .foregroundColor(.green)
+                        }
+                    ){ForEach(0..<dogs.count, id: \.self) { index in
+                            ProfileMatchCard(dog: dogs[index], owner: owners[index])
+                                .padding(.horizontal)
+                                .padding(.top, 16)
+                        }
+                    }
+                }
             }
-        }
-    }
-
-    private var dogAgeView: some View {
-        let ageInWeeks = Calendar.current.dateComponents([.weekOfYear], from: onboardingVM.dogDOB, to: Date()).weekOfYear ?? 0
-        return Text("Dog age: \(ageInWeeks) weeks")
-            .font(.subheadline)
-            .foregroundColor(.gray)
-    }
-
-    private var logoutButton: some View {
-        Button(action: {
-            authViewModel.signOut()
-        }) {
-            Text("Log Out")
-                .foregroundColor(.red)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+            .sheet(isPresented: $showFilterSheet) {
+                FilterDetailSheet(
+                    filterSettings: $filterSettings,
+                    onDismiss: { showFilterSheet = false }
+                )
+            }
         }
     }
 }
 
 #Preview {
     HomeView()
-        .environmentObject(OnboardingViewModel())
-        .environmentObject(AuthViewModel())
 }
+
+

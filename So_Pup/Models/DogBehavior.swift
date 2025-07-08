@@ -12,5 +12,25 @@ struct DogBehavior: Codable {
     var customTriggerSensitivity: String?
 }
 
+extension DogBehavior {
+    var tags: [String] {
+        var result: [String] = []
 
+        result.append(contentsOf: playStyles)
+        result.append(contentsOf: preferredPlayEnvironments)
+        result.append(contentsOf: triggersAndSensitivities)
+
+        if let custom = customPlayStyle, !custom.isEmpty {
+            result.append(custom)
+        }
+        if let custom = customPlayEnvironment, !custom.isEmpty {
+            result.append(custom)
+        }
+        if let custom = customTriggerSensitivity, !custom.isEmpty {
+            result.append(custom)
+        }
+
+        return result
+    }
+}
 

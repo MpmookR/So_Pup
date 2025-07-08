@@ -6,11 +6,12 @@ struct BehaviourSelection: View {
     @Binding var selectedOptions: Set<String>
     var allowsMultipleSelection: Bool = true
     var showToggle: Bool = false
-
+    var allowCustomTags: Bool = true // New flag
+    
     @State private var isExpanded: Bool = true
     @State private var showingAddField: Bool = false
     @State private var newTag: String = ""
-
+    
     let columns = [GridItem(.adaptive(minimum: 100), spacing: 12)]
 
     var body: some View {
@@ -35,11 +36,15 @@ struct BehaviourSelection: View {
                     ForEach(options, id: \.self) { option in
                         optionButton(option)
                     }
-                    ForEach(Array(selectedOptions.subtracting(options)), id: \.self) { custom in
-                        optionButton(custom)
+
+                    if allowCustomTags {
+                        ForEach(Array(selectedOptions.subtracting(options)), id: \.self) { custom in
+                            optionButton(custom)
+                        }
                     }
                 }
 
+                if allowCustomTags {
                     if showingAddField {
                         TextField("Custom...", text: $newTag, onCommit: addCustomTag)
                             .padding(8)
@@ -58,6 +63,7 @@ struct BehaviourSelection: View {
                                 .background(Color.socialAccent)
                                 .cornerRadius(99)
                         }
+                    }
                 }
             }
         }
@@ -101,15 +107,3 @@ struct BehaviourSelection: View {
         showingAddField = false
     }
 }
-
-//struct BehaviourSelection_Previews: PreviewProvider {
-//    static var previews: some View {
-//        BehaviourSelection(
-//            title: "Play Style",
-//            options: ["Chaser", "Wrestler", "Tugger", "Mouthy"],
-//            selectedOptions: .constant(["Chaser"]),
-//            showToggle: true
-//        )
-//        .padding()
-//    }
-//}

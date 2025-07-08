@@ -3,6 +3,8 @@ import FirebaseFirestore
 import FirebaseCore
 import FirebaseAuth
 import FirebaseStorage
+import CoreLocation
+
 
 ///https://firebase.google.com/docs/storage/ios/start?
 @MainActor
@@ -11,9 +13,14 @@ class OnboardingViewModel: ObservableObject {
     @Published var name = ""
     @Published var gender = ""
     @Published var profilePicture: UIImage?
-    @Published var location = ""
     @Published var bio = ""
     @Published var languages: [String] = []
+    
+    @Published var location = ""
+    @Published var userCoordinate: CLLocationCoordinate2D?
+    @Published var locationErrorMessage: String?
+    @Published var locationPermissionDenied: Bool = false
+
     
     // Dog
     @Published var dogName = ""
@@ -34,8 +41,6 @@ class OnboardingViewModel: ObservableObject {
     @Published var customPlayStyle: String?
     @Published var customPlayEnvironment: String?
     @Published var customTriggerSensitivity: String?
-    
-    
     
     @Published var dogWeight: Double = 0
     @Published var dogWeightString: String = "" {
@@ -59,11 +64,45 @@ class OnboardingViewModel: ObservableObject {
     
     @Published var mode = "puppy"
     @Published var status = "incomplete"
-    
+
+    // check mode based on dog DOB
     func determineMode() {
         let age = Calendar.current.dateComponents([.weekOfYear], from: dogDOB, to: Date()).weekOfYear ?? 0
         mode = age < 12 ? "puppy" : "social"
     }
+    
+    // fetch user location
+    func fetchUserLocation() async {
+        let service = LocationService()
+
+        do {
+            // Attempt to fetch coordinate and city from CoreLocation
+            let result = try await service.requestLocation()
+
+            // Store successful location and clear previous errors
+            self.userCoordinate = result.coordinate
+            self.location = result.city ?? "Unknown"
+            self.locationPermissionDenied = false
+            self.locationErrorMessage = nil
+            print("📍 Location fetched: \(result.coordinate), City: \(result.city ?? "-")")
+
+        } catch LocationService.LocationError.permissionDenied {
+            // User explicitly denied location access
+            self.userCoordinate = nil
+            self.location = "Unknown"
+            self.locationPermissionDenied = true
+            self.locationErrorMessage = "You’ve denied location access. This means matching and visibility based on your location won’t work properly."
+
+        } catch {
+            // Other failure (e.g., system error, timeout)
+            self.userCoordinate = nil
+            self.location = "Unknown"
+            self.locationPermissionDenied = true
+            self.locationErrorMessage = "Unable to retrieve your location."
+            print("❌ Location error: \(error.localizedDescription)")
+        }
+    }
+
     
     func saveToFirebase() async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -71,7 +110,7 @@ class OnboardingViewModel: ObservableObject {
         
         do {
             // MARK:  initialised them here as te complier cannot process long struct
-            let parsedGender = DogGenderOption(rawValue: dogGender) ?? .other
+            let parsedGender = DogGenderOption(rawValue: dogGender) ?? .male
             let parsedSize = SizeOption(rawValue: dogSize) ?? .medium
             let parsedMode = DogMode(rawValue: mode) ?? .puppy
             let parsedStatus = DogProfileStatus(rawValue: status) ?? .incomplete
@@ -137,14 +176,17 @@ class OnboardingViewModel: ObservableObject {
             
             
             // 5. Save dog
-            let dogRef = db.collection("dogs").document()
+            let dogRef = db.collection("dogs").document(uid) //Use the userId as dog document ID (1:1 relationship)
             try dogRef.setData(from: dog)
             print("✅ Saved dog data successfully")
             
             
             // 6. Prepare user coordinate
-            let coordinate = Coordinate(latitude: 0, longitude: 0) // Replace with actual from LocationManager
-            
+            let coordinate = Coordinate(
+                latitude: userCoordinate?.latitude ?? 0,
+                longitude: userCoordinate?.longitude ?? 0
+            )
+
             // 7. Create UserModel
             let user = UserModel(
                 id: uid,
@@ -156,7 +198,8 @@ class OnboardingViewModel: ObservableObject {
                 bio: bio,
                 languages: languages,
                 customLanguage: nil,
-                dogId: dogRef.documentID
+                dogId: dogRef.documentID,
+                locationPermissionDenied: userCoordinate == nil
             )
             
             // 8. Save user

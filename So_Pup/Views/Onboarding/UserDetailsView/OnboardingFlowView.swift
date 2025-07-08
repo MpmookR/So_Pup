@@ -27,9 +27,15 @@ struct OnboardingFlowView: View {
                     
                 case 2:
                     MoreDogDetailsView(
-                        onNext: { currentStep += 1 },
+                        onNext: {
+                            onboardingVM.determineMode()
+                            if onboardingVM.mode == "puppy" {
+                                currentStep = 5 // Skip to final step
+                            } else {
+                                currentStep += 1 // Continue to behaviour view
+                            }
+                        },
                         onBack: { currentStep -= 1 }
-                        
                     )
                     .environmentObject(onboardingVM)
                     
@@ -54,6 +60,8 @@ struct OnboardingFlowView: View {
                         onComplete: {
                             Task {
                                 do {
+                                    await onboardingVM.fetchUserLocation()
+
                                     try await onboardingVM.saveToFirebase() // Saves user and dog data
                                     await markOnboardingComplete()       // Updates Firestore flag
                                     authViewModel.hasCompletedOnboarding = true // Triggers RootView update

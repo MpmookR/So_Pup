@@ -10,7 +10,7 @@ struct RootView: View {
                     ProgressView("Loading...")
                 } else if authViewModel.isLoggedIn {
                     if authViewModel.hasCompletedOnboarding {
-                        HomeView()
+                        MainTabView()
                             .transition(.opacity)
                     } else {
                         OnboardingFlowView()

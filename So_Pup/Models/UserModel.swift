@@ -1,16 +1,17 @@
 import Foundation
 
 struct UserModel: Identifiable, Codable{
-    var id: String //firebase UID
+    var id: String
     var name: String
     var gender: UserGenderOption
     var profilePictureURL: String?
-    var location: String //city
-    var coordinate: Coordinate  // latitude + longitude
+    var location: String
+    var coordinate: Coordinate
     var bio: String?
     var languages: [String]
-    var customLanguage: String? 
+    var customLanguage: String?
     var dogId: String
+    var locationPermissionDenied: Bool?
 }
 
 
