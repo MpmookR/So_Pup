@@ -12,6 +12,5 @@ struct DogFilterSettings {
 
     var selectedHealthStatus: HealthVerificationStatus? = nil
     var neuteredOnly: Bool? = nil
-
 }
 

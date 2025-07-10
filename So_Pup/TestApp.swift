@@ -2,26 +2,21 @@
 //import FirebaseCore
 //
 //@main
-//struct TestApp: App {
-//    @StateObject private var onboardingVM = OnboardingViewModel()
-//
+//struct MockUploadTestApp: App {
 //    init() {
 //        FirebaseApp.configure()
 //
-//        // Upload dog breeds to Firestore during development
 //        #if DEBUG
-//        BreedUploader.uploadBreeds()
+//        Task {
+//            await MockDataUploader.uploadMockData()
+//        }
 //        #endif
 //    }
 //
 //    var body: some Scene {
 //        WindowGroup {
-//            NavigationStack {
-//                MoreDogDetailsView(onNext: {}, onBack: {})
-//                    .environmentObject(onboardingVM)
-//            }
+//            Text("Uploading Mock Data...")
 //        }
 //    }
 //}
-//
-//
+

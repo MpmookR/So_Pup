@@ -1,15 +1,16 @@
-//
-//  ProfileView.swift
-//  So_Pup
-//
-//  Created by Mook Rattana on 08/07/2025.
-//
-
 import SwiftUI
 
 struct ProfileView: View {
+    
+    @EnvironmentObject var authVM : AuthViewModel
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        
+        VStack{
+            Button("Logout") {
+                authVM.signOut()
+            }
+            .foregroundColor(Color.socialBorder)
+        }
     }
 }
 

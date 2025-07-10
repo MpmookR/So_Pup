@@ -11,13 +11,13 @@ struct MockDogData {
         dob: Calendar.current.date(byAdding: .weekOfYear, value: -8, to: Date())!,
         isNeutered: nil,
         behavior: nil,
-        fleaTreatmentDate: nil,
-        wormingTreatmentDate: nil,
+        healthStatus: nil,
         coreVaccination1Date: Calendar.current.date(byAdding: .weekOfYear, value: -6, to: Date())!,
         coreVaccination2Date: Calendar.current.date(byAdding: .weekOfYear, value: -7, to: Date())!,
         mode: .puppy,
         status: .incomplete,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/e24bfbd855cda99e303975f2bd2a1bf43079b320-800x600.webp?updatedAt=1751894023966"]
+        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/e24bfbd855cda99e303975f2bd2a1bf43079b320-800x600.webp?updatedAt=1751894023966"],
+        isMock: true
     )
 
     static let dog2 = DogModel(
@@ -37,13 +37,16 @@ struct MockDogData {
             customPlayEnvironment: nil,
             customTriggerSensitivity: nil
         ),
-        fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
-        wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!,
+        healthStatus: HealthStatus(
+            fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
+            wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
+        ),
         coreVaccination1Date: nil,
         coreVaccination2Date: nil,
         mode: .social,
         status: .ready,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/202104iStock-1257560195-scaled-1.avif?updatedAt=1751894024122"]
+        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/202104iStock-1257560195-scaled-1.avif?updatedAt=1751894024122"],
+        isMock: true
     )
 
     static let dog3 = DogModel(
@@ -63,13 +66,17 @@ struct MockDogData {
             customPlayEnvironment: nil,
             customTriggerSensitivity: nil
         ),
-        fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
-        wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!,
+        healthStatus: HealthStatus(
+            fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
+            wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
+        ),
         coreVaccination1Date: nil,
         coreVaccination2Date: nil,
         mode: .social,
         status: .incomplete,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/907aa7439656710f3aeb351075b6decc.jpg?updatedAt=1751894023914"]
+        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/907aa7439656710f3aeb351075b6decc.jpg?updatedAt=1751894023914"],
+        isMock: true
+
     )
 
     static let dog4 = DogModel(
@@ -89,16 +96,17 @@ struct MockDogData {
             customPlayEnvironment: nil,
             customTriggerSensitivity: nil
         ),
-        fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
-        wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!,
+        healthStatus: HealthStatus(
+            fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
+            wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
+        ),
         coreVaccination1Date: nil,
         coreVaccination2Date: nil,
         mode: .social,
         status: .ready,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/IMG_9823.jpeg?updatedAt=1751894024537"]
+        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/IMG_9823.jpeg?updatedAt=1751894024537"],
+        isMock: true
     )
 
     static let all: [DogModel] = [dog1, dog2, dog3, dog4]
 }
-
-

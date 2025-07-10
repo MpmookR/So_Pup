@@ -4,9 +4,8 @@ struct HomeView: View {
     @State private var showFilterSheet = false
     @State private var filterSettings = DogFilterSettings()
     
-    // Mock data
-    let dogs: [DogModel] = [MockDogData.dog1, MockDogData.dog2, MockDogData.dog3, MockDogData.dog4]
-    let owners: [UserModel] = [MockUserData.user1, MockUserData.user2, MockUserData.user3, MockUserData.user4]
+    @StateObject private var matchingVM = MatchingViewModel()
+    
     
     var body: some View {
         NavigationView {
@@ -24,18 +23,20 @@ struct HomeView: View {
                     
                     // MARK: - Sticky Filter Bar
                     Section(header:
-                        ZStack {
-                            Color(.systemBackground)
-                                .frame(maxWidth: .infinity)
-                            
-                            FilterBarView(filterSettings: filterSettings) {
-                                showFilterSheet = true
-                            }
-                            .padding(.horizontal)
-
+                                ZStack {
+                        Color(.systemBackground)
+                            .frame(maxWidth: .infinity)
+                        
+                        FilterBarView(filterSettings: filterSettings) {
+                            showFilterSheet = true
                         }
-                    ){ForEach(0..<dogs.count, id: \.self) { index in
-                            ProfileMatchCard(dog: dogs[index], owner: owners[index])
+                        .padding(.horizontal)
+                        
+                    }
+                        
+                    ){
+                        ForEach(matchingVM.matchedProfiles, id: \.dog.id) { profile in
+                            ProfileMatchCard(dog: profile.dog, owner: profile.owner)
                                 .padding(.horizontal)
                                 .padding(.top, 16)
                         }
@@ -45,8 +46,16 @@ struct HomeView: View {
             .sheet(isPresented: $showFilterSheet) {
                 FilterDetailSheet(
                     filterSettings: $filterSettings,
-                    onDismiss: { showFilterSheet = false }
+                    onDismiss: {
+                        showFilterSheet = false
+                        matchingVM.applyMatching(using: filterSettings)
+                    }
                 )
+            }
+            
+            // MARK: fetch from fireStore
+            .task {
+                await matchingVM.load()
             }
         }
     }

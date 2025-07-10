@@ -63,8 +63,8 @@ enum SizeOption: String, CaseIterable, Identifiable, Codable {
 }
 
 
-enum HealthVerificationStatus: String, CaseIterable {
-    case verified
+enum HealthVerificationStatus: String, CaseIterable, Codable {
+    case verified // if flea treament and worming Treatment is up to date
     case unverified
     
     var id: String { rawValue }

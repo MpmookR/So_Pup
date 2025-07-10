@@ -31,7 +31,6 @@ class OnboardingViewModel: ObservableObject {
     @Published var dogDOB = Date()
     @Published var dogIsNeutered: Bool?
     @Published var dogImages: [UIImage] = [] // up to 5
-    @Published var dogHealthStatus: [String] = []
     
     // dog behaviour
     @Published var selectedPlayStyles: Set<String> = []
@@ -56,7 +55,7 @@ class OnboardingViewModel: ObservableObject {
         dogWeightString = dogWeight == 0 ? "" : String(format: "%.2f", dogWeight)
     }
     
-    // health
+    // building HealthStatus
     @Published var fleaTreatmentDate: Date?
     @Published var wormingTreatmentDate: Date?
     @Published var coreVaccination1Date: Date?
@@ -115,8 +114,13 @@ class OnboardingViewModel: ObservableObject {
             let parsedMode = DogMode(rawValue: mode) ?? .puppy
             let parsedStatus = DogProfileStatus(rawValue: status) ?? .incomplete
             
-            let fleaDate = parsedMode == .social ? fleaTreatmentDate : nil
-            let wormingDate = parsedMode == .social ? wormingTreatmentDate : nil
+            let healthData: HealthStatus? = parsedMode == .social
+                ? HealthStatus(
+                    fleaTreatmentDate: fleaTreatmentDate,
+                    wormingTreatmentDate: wormingTreatmentDate
+                )
+                : nil
+
             let core1 = parsedMode == .puppy ? coreVaccination1Date : nil
             let core2 = parsedMode == .puppy ? coreVaccination2Date : nil
             
@@ -165,8 +169,7 @@ class OnboardingViewModel: ObservableObject {
                 dob: dogDOB,
                 isNeutered: dogIsNeutered,
                 behavior: behaviorData,
-                fleaTreatmentDate: fleaDate,
-                wormingTreatmentDate: wormingDate,
+                healthStatus: healthData,
                 coreVaccination1Date: core1,
                 coreVaccination2Date: core2,
                 mode: parsedMode,

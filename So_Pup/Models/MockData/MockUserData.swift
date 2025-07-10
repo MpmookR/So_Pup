@@ -12,7 +12,9 @@ struct MockUserData {
         languages: ["English"],
         customLanguage: nil,
         dogId: "dog1",
-        locationPermissionDenied: false
+        locationPermissionDenied: true,
+        isMock: true
+
     )
 
     static let user2 = UserModel(
@@ -26,7 +28,9 @@ struct MockUserData {
         languages: ["English", "Spanish"],
         customLanguage: nil,
         dogId: "dog2",
-        locationPermissionDenied: false
+        locationPermissionDenied: false,
+        isMock: true
+
     )
 
     static let user3 = UserModel(
@@ -40,7 +44,9 @@ struct MockUserData {
         languages: ["Vietnamese"],
         customLanguage: "French",
         dogId: "dog3",
-        locationPermissionDenied: nil
+        locationPermissionDenied: true,
+        isMock: true
+
     )
 
     static let user4 = UserModel(
@@ -54,7 +60,8 @@ struct MockUserData {
         languages: ["English"],
         customLanguage: nil,
         dogId: "dog4",
-        locationPermissionDenied: true
+        locationPermissionDenied: true,
+        isMock: true
     )
 
     static let all: [UserModel] = [user1, user2, user3, user4]

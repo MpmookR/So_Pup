@@ -1,0 +1,35 @@
+import FirebaseFirestore
+import FirebaseAuth
+import Foundation
+
+
+struct MockDataUploader{
+    static func uploadMockData() async {
+        let db = Firestore.firestore()
+        
+        // Upload dogs
+        for dog in MockDogData.all {
+            let dogRef = db.collection("dogs").document(dog.id)
+            do {
+                try await dogRef.setData(from: dog)
+                print("✅ Uploaded dog: \(dog.name)")
+            } catch {
+                print("❌ Failed to upload dog: \(dog.name), \(error.localizedDescription)")
+            }
+        }
+        
+        // Upload users
+        for user in MockUserData.all {
+            let userRef = db.collection("users").document(user.id)
+            do {
+                try await userRef.setData(from: user)
+                print("✅ Uploaded user: \(user.name)")
+            } catch {
+                print("❌ Failed to upload user: \(user.name), \(error.localizedDescription)")
+            }
+        }
+    }
+}
+
+
+

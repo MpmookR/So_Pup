@@ -12,6 +12,9 @@ struct UserModel: Identifiable, Codable{
     var customLanguage: String?
     var dogId: String
     var locationPermissionDenied: Bool?
+    
+    var isMock: Bool = false // for testing
+
 }
 
 
@@ -19,3 +22,4 @@ struct Coordinate: Codable {
     var latitude: Double
     var longitude: Double
 }
+
