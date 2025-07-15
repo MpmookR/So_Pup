@@ -6,12 +6,19 @@ struct CustomNavBar: View {
     var backIcon: String = "chevron.left"
     var onBackTap: (() -> Void)? = nil
     var backgroundColor: Color = .white
-
+    
+    @Environment(\.dismiss) private var dismiss
+    
     var body: some View {
         HStack {
             if showBack {
                 Button(action: {
-                    onBackTap?()
+                    if let onBackTap = onBackTap {
+                        onBackTap()
+                    } else {
+                        dismiss()
+                    }
+                    
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: backIcon)
@@ -24,20 +31,21 @@ struct CustomNavBar: View {
                     .padding(.leading, 8)
                 }
             } else {
-                Spacer().frame(width: 44)
+                Spacer()
+                    .frame(width: 44)
             }
-
+            
             Spacer()
-
+            
             if let title = title {
                 Text(title)
                     .font(.headline)
                     .foregroundColor(.black)
             }
-
+            
             Spacer()
-
-            Spacer().frame(width: 44) // right-side spacer
+            
+            Spacer().frame(width: 44)
         }
         .padding(.vertical, 12)
         .background(backgroundColor.opacity(0.95))
@@ -52,13 +60,13 @@ struct CustomNavBar: View {
             onBackTap: { print("Back tapped") },
             backgroundColor: .yellow.opacity(0.3)
         )
-
+        
         CustomNavBar(
             title: nil,
             showBack: true,
             backgroundColor: Color.puppyLight
         )
-
+        
         CustomNavBar(
             title: "SoPup",
             showBack: false,

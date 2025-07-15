@@ -3,15 +3,17 @@ import SwiftUI
 struct ProfileMatchCard: View {
     let dog: DogModel
     let owner: UserModel
-
+    let userCoordinate: Coordinate
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Top Row
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(dog.name)
+                    Text(dog.displayName)
                         .font(.headline)
-
+                        .foregroundColor(Color.socialText)
+                    
                     HStack(spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .foregroundColor(Color.black)
@@ -21,9 +23,9 @@ struct ProfileMatchCard: View {
                     .font(.caption)
                     .foregroundColor(Color.socialText)
                 }
-
+                
                 Spacer()
-
+                
                 VStack (spacing: 4) {
                     Button(action: {
                         // Match logic
@@ -33,12 +35,13 @@ struct ProfileMatchCard: View {
                             .foregroundColor(dog.mode == .puppy ? Color.puppyButton : Color.socialButton)
                     }
                     
-                    Text("1 km away")
+                    Text(owner.coordinate.formattedDistance(from: userCoordinate))
                         .font(.caption)
                         .foregroundColor(Color.socialText)
+                    
                 }
             }
-
+            
             // Owner avatar + dog details
             HStack(alignment: .center, spacing: 8) {
                 if let url = dog.imageURLs.first, let imageURL = URL(string: url) {
@@ -53,24 +56,29 @@ struct ProfileMatchCard: View {
                     .clipShape(Circle())
                 }
                 
-
+                
                 HStack {
                     VStack(alignment: .leading, spacing: 8) {
                         Label(dog.gender.rawValue.capitalized, systemImage: "person")
-                        Label(ageText(from: dog.dob), systemImage: "calendar")
-
+                            .foregroundColor(Color.socialText)
+                        Label(dog.ageText, systemImage: "birthday.cake")
+                            .foregroundColor(Color.socialText)
+                        
                     }
                     Spacer()
-
+                    
                     VStack(alignment: .leading, spacing: 8) {
                         Label(dog.breed, systemImage: "pawprint")
+                            .foregroundColor(Color.socialText)
                         Label("\(Int(dog.weight)) kg", systemImage: "scalemass")
+                            .foregroundColor(Color.socialText)
+                        
                     }
                 }
                 .padding(.horizontal, 16.0)
                 .font(.footnote)
             }
-
+            
             // Tags (social mode only)
             if dog.mode == .social, let behavior = dog.behavior {
                 FlexibleTagView(
@@ -78,7 +86,8 @@ struct ProfileMatchCard: View {
                     showSeeMore: true,
                     onSeeMoreTapped: {
                         print("Navigate to full profile")
-                    }
+                    },
+                    mode: dog.mode
                 )
             }
         }
@@ -87,33 +96,21 @@ struct ProfileMatchCard: View {
         .cornerRadius(21)
         .shadow(radius: 2)
     }
-
-    private func ageText(from dob: Date) -> String {
-        let now = Date()
-        let weeks = Calendar.current.dateComponents([.weekOfYear], from: dob, to: now).weekOfYear ?? 0
-        let years = Calendar.current.dateComponents([.year], from: dob, to: now).year ?? 0
-
-        if weeks < 12 {
-            return "\(weeks) weeks"
-        } else if years < 1 {
-            let months = Calendar.current.dateComponents([.month], from: dob, to: now).month ?? 0
-            return "\(months) months"
-        } else {
-            return "\(years) years"
-        }
-    }
+    
 }
 
 #Preview {
     VStack(spacing: 20) {
         ProfileMatchCard(
-            dog: MockDogData.dog1, // Puppy Mode
-            owner: MockUserData.user1
+            dog: MockDogData.dog1, 
+            owner: MockUserData.user1,
+            userCoordinate: MockUserData.user2.coordinate
         )
         
         ProfileMatchCard(
-            dog: MockDogData.dog2, // Social Mode
-            owner: MockUserData.user2
+            dog: MockDogData.dog2,
+            owner: MockUserData.user2,
+            userCoordinate: MockUserData.user1.coordinate
         )
     }
     .padding()

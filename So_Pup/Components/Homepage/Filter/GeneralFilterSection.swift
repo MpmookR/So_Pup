@@ -36,8 +36,11 @@ struct GeneralFilterSection: View {
                         .fontWeight(.bold)
                     Spacer()
                     
-                    Text("Within \(filterSettings.maxDistanceInKm) km")
-                        .font(.subheadline)
+                    Text(
+                        filterSettings.maxDistanceInKm == 100
+                        ? "All locations"
+                        : "Within \(filterSettings.maxDistanceInKm) km"
+                    )                        .font(.subheadline)
                         .foregroundColor(.gray)
                 }
                 

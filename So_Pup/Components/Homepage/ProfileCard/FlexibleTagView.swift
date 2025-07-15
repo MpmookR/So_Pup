@@ -4,13 +4,15 @@ struct FlexibleTagView: View {
     let tags: [String]
     let showSeeMore: Bool
     let onSeeMoreTapped: (() -> Void)?
+    let mode: DogMode
+
     let columns = [GridItem(.adaptive(minimum: 100), spacing: 2)]
     
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
             ForEach(displayedTags, id: \.self) { tag in
                 Text(tag)
-                    .font(.footnote)
+                    .font(.subheadline)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 8)
                     .frame(minWidth: 100)
@@ -27,7 +29,7 @@ struct FlexibleTagView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 8)
                         .frame(minWidth: 100)
-                        .background(Color.socialAccent)
+                        .background(mode == .puppy ? Color.puppyAccent : Color.socialAccent)
                         .foregroundColor(.blue)
                         .cornerRadius(21)
                 }
@@ -54,7 +56,8 @@ struct FlexibleTagView: View {
         showSeeMore: true,
         onSeeMoreTapped: {
             print("Navigate to full profile")
-        }
+        },
+        mode: .puppy
     )
     .padding()
 }

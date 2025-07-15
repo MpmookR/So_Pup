@@ -16,10 +16,15 @@ struct MockDogData {
         coreVaccination2Date: Calendar.current.date(byAdding: .weekOfYear, value: -7, to: Date())!,
         mode: .puppy,
         status: .incomplete,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/e24bfbd855cda99e303975f2bd2a1bf43079b320-800x600.webp?updatedAt=1751894023966"],
+        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/e24bfbd855cda99e303975f2bd2a1bf43079b320-800x600.webp?updatedAt=1751894023966",
+                    "https://placedog.net/800/600?id=11",
+                    "https://placedog.net/800/600?id=12",
+                    "https://placedog.net/800/600?id=13",
+                    "https://placedog.net/800/600?id=14"],
+        bio: "Hey, I’m Bean! Small in size, huge in cuddles. I love belly rubs and sniffing leaves.",
         isMock: true
     )
-
+    
     static let dog2 = DogModel(
         id: "dog2",
         name: "Bella",
@@ -46,9 +51,10 @@ struct MockDogData {
         mode: .social,
         status: .ready,
         imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/202104iStock-1257560195-scaled-1.avif?updatedAt=1751894024122"],
+        bio: "Hi, I’m Bella! I’m all about zoomies and ball chasing. Let’s play at the park!",
         isMock: true
     )
-
+    
     static let dog3 = DogModel(
         id: "dog3",
         name: "Ryu",
@@ -76,9 +82,9 @@ struct MockDogData {
         status: .incomplete,
         imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/907aa7439656710f3aeb351075b6decc.jpg?updatedAt=1751894023914"],
         isMock: true
-
+        
     )
-
+    
     static let dog4 = DogModel(
         id: "dog4",
         name: "Kuma",
@@ -107,6 +113,6 @@ struct MockDogData {
         imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/IMG_9823.jpeg?updatedAt=1751894024537"],
         isMock: true
     )
-
+    
     static let all: [DogModel] = [dog1, dog2, dog3, dog4]
 }

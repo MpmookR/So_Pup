@@ -2,6 +2,7 @@ import SwiftUI
 import FirebaseCore
 import FirebaseStorage
 import FirebaseAuth
+import SwiftData
 
 @main
 struct SoPupApp: App {
@@ -18,6 +19,7 @@ struct SoPupApp: App {
             RootView()
                 .environmentObject(authViewModel)
                 .environmentObject(onboardingViewModel)
+                .modelContainer(for: DogFilterSettingsModel.self)
             
             // Check login + onboarding status as early as possible
                 .task {

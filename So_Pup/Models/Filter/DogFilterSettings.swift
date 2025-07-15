@@ -1,7 +1,9 @@
 import Foundation
 
+// Used in your app logic and UI
+
 struct DogFilterSettings {
-    var maxDistanceInKm: Int = 60
+    var maxDistanceInKm: Int = 100
     var selectedGender: DogGenderOption? = nil
     var selectedSizes: Set<SizeOption> = []
 

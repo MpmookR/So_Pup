@@ -65,8 +65,14 @@ class MatchingViewModel: ObservableObject {
             // Calculate distance between user and dog owner
             let dist = distance(from: userLoc, to: owner.coordinate)
             
-            // Return a matched profile
-            return MatchProfile(dog: dog, owner: owner, distanceInMeters: dist)
+            // filter by the max distance
+            /// when maxDistanceInKm < 100 - no distance limit applies
+            if filter.maxDistanceInKm < 100, dist > Double(filter.maxDistanceInKm) * 1000 {
+                return nil
+            }
+
+
+                return MatchProfile(dog: dog, owner: owner, distanceInMeters: dist)
         }
         // Sort results by closest distance
         .sorted { ($0.distanceInMeters ?? 0) < ($1.distanceInMeters ?? 0) }

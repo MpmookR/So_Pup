@@ -22,6 +22,8 @@ struct DogModel: Identifiable, Codable{
     var status: DogProfileStatus
     var imageURLs: [String] // max 5, stored in Firebase Storage
     
+    var bio: String?
+    
     var isMock: Bool = false // for testing
 }
 
@@ -39,4 +41,30 @@ extension DogModel {
         }
         return .unverified
     }
+    
+    var ageInWeeks: Int {
+        Calendar.current.dateComponents([.weekOfYear], from: dob, to: Date()).weekOfYear ?? 0
+    }
+    
+    var ageInMonths: Int {
+        Calendar.current.dateComponents([.month], from: dob, to: Date()).month ?? 0
+    }
+    
+    var ageInYears: Int {
+        Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
+    }
+    
+    var ageText: String {
+        if ageInWeeks < 12 {
+            return "\(ageInWeeks) weeks"
+        } else if ageInYears < 1 {
+            return "\(ageInMonths) months"
+        } else {
+            return "\(ageInYears) years"
+        }
+    }
+    
+    var displayName: String {
+            mode == .puppy ? "Puppy \(name)" : name
+        }
 }
