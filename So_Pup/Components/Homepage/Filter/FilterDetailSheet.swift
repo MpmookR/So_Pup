@@ -62,15 +62,30 @@ struct FilterDetailSheet: View {
 
                 Divider()
 
-                SubmitButton(
-                    title: "Apply Filters",
-                    backgroundColor: Color.socialButton,
-                    foregroundColor: Color.socialText
-                ) {
-                    onDismiss()
+                VStack(spacing: 12) {
+                    Button("Reset Filters") {
+                        resetFilters()
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+                    
+                    SubmitButton(
+                        title: "Apply Filters",
+                        backgroundColor: Color.socialButton,
+                        foregroundColor: Color.socialText
+                    ) {
+                        onDismiss()
+                    }
                 }
                 .padding()
             }
         }
     }
+    
+    private func resetFilters() {
+        filterSettings = DogFilterSettings()  // Resets to default
+    }
 }
+
+
+

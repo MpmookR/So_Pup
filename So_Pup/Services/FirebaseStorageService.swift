@@ -1,5 +1,5 @@
 // cloud: Image/file uploads/downloads
-
+// focused on Firebase Storage (bucket files, images, uploads/downloads)
 import Foundation
 import FirebaseStorage
 import UIKit

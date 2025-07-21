@@ -1,9 +1,7 @@
 import SwiftUI
 
 struct DogGeneralDetailsView: View {
-    @EnvironmentObject var onboardingVM: OnboardingViewModel
-    @Environment(\.presentationMode) var presentationMode
-    
+    @EnvironmentObject var onboardingVM: OnboardingViewModel    
     // use @State when not something the user is editing or saving | static data for display only
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage?
@@ -21,7 +19,10 @@ struct DogGeneralDetailsView: View {
     var onNext: () -> Void
     var onBack: () -> Void
     
+
+    
     var body: some View {
+        
         ZStack {
             Color.socialLight
                 .ignoresSafeArea()
@@ -95,7 +96,7 @@ struct DogGeneralDetailsView: View {
                     DogBreedSelector(
                         selectedBreed: $onboardingVM.dogBreed,  // Selected value goes into shared onboardingVM
                         customMixedBreed: $mixedBreed,          // Optional input for custom breeds
-                        allBreeds: dogBreeds                    // The list of options to choose from
+                        allBreeds: dogBreeds   // The list of options to choose from
                     )
                     
                 }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct DogModel: Identifiable, Codable{
+struct DogModel: Identifiable, Codable, DogProfile, PuppyProfile, SocialDogProfile {
     var id: String = UUID().uuidString
     var name: String
     var gender: DogGenderOption
@@ -10,24 +10,25 @@ struct DogModel: Identifiable, Codable{
     var dob: Date
     var isNeutered: Bool?
     
-    // for dogs >= 12 weeks
+    // social > 12
     var behavior: DogBehavior?
-    var healthStatus: HealthStatus?
+    var healthStatus: HealthStatus? //verified or unverified
     
-    // for < 12 weeks
+    // Puppy: dogs under 12 weeks
     var coreVaccination1Date: Date?
     var coreVaccination2Date: Date?
     
     var mode: DogMode
-    var status: DogProfileStatus
+    var status: DogProfileStatus //incomplete , ready for social mode
     var imageURLs: [String] // max 5, stored in Firebase Storage
     
     var bio: String?
     
-    var isMock: Bool = false // for testing
+//    var isMock: Bool = false // for mock testing
+    var isMock: Bool?
 }
 
-/// Equatable allows values of a type to be compated using == or !=
+/// Equatable allows values of a type to be compared using == or !=
 struct HealthStatus : Codable, Equatable{
     var fleaTreatmentDate: Date?
     var wormingTreatmentDate: Date?

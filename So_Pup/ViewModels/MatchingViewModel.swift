@@ -37,7 +37,7 @@ class MatchingViewModel: ObservableObject {
             let dogSnapshot = try await db.collection("dogs").getDocuments()
             allDogs = dogSnapshot.documents.compactMap { try? $0.data(as: DogModel.self) }
             print("Dogs fetched: \(allDogs.count)")
-
+            
             let userSnapshot = try await db.collection("users").getDocuments()
             allUsers = userSnapshot.documents.compactMap { try? $0.data(as: UserModel.self) }
             print("Users fetched: \(allUsers.count)")
@@ -45,23 +45,31 @@ class MatchingViewModel: ObservableObject {
             print("❌ Failed to fetch data: \(error)")
         }
     }
-
+    
     
     // Run matching again with custom filters
     func applyMatching(using filter: DogFilterSettings = .init()) {
-        guard let userLoc = userCoordinate else {
+        guard let userLoc = userCoordinate,
+        let currentUserId = Auth.auth().currentUser?.uid // the singleton instance of Firebase Auth
+        
+        else {
             matchedProfiles = []
             return
         }
         // Build matched profiles by checking all dogs against filters
         matchedProfiles = allDogs.compactMap { dog -> MatchProfile? in
             guard let owner = allUsers.first(where: { $0.dogId == dog.id }) else { return nil }
-
+            
+            // Skip if this dog belongs to the current user
+            if owner.id == currentUserId {
+                return nil
+            }
+            
             // Filter out if the dog doesn't match the criteria
             if !isMatch(dog, with: filter) {
                 return nil
             }
-
+            
             // Calculate distance between user and dog owner
             let dist = distance(from: userLoc, to: owner.coordinate)
             
@@ -70,9 +78,9 @@ class MatchingViewModel: ObservableObject {
             if filter.maxDistanceInKm < 100, dist > Double(filter.maxDistanceInKm) * 1000 {
                 return nil
             }
-
-
-                return MatchProfile(dog: dog, owner: owner, distanceInMeters: dist)
+            
+            
+            return MatchProfile(dog: dog, owner: owner, distanceInMeters: dist)
         }
         // Sort results by closest distance
         .sorted { ($0.distanceInMeters ?? 0) < ($1.distanceInMeters ?? 0) }
@@ -84,31 +92,31 @@ class MatchingViewModel: ObservableObject {
         if !filter.selectedSizes.isEmpty, !filter.selectedSizes.contains(dog.size) { return false }
         if let status = filter.selectedHealthStatus, dog.healthVerificationStatus != status { return false }
         if let neutered = filter.neuteredOnly, dog.isNeutered != neutered { return false }
-
+        
         if !filter.selectedPlayStyleTags.isEmpty {
             let dogTags = Set(dog.behavior?.playStyles ?? [])
             if filter.selectedPlayStyleTags.isDisjoint(with: dogTags) {
                 return false
             }
         }
-
+        
         if !filter.selectedEnvironmentTags.isEmpty {
             let dogTags = Set(dog.behavior?.preferredPlayEnvironments ?? [])
             if filter.selectedEnvironmentTags.isDisjoint(with: dogTags) {
                 return false
             }
         }
-
+        
         if !filter.selectedTriggerTags.isEmpty {
             let dogTags = Set(dog.behavior?.triggersAndSensitivities ?? [])
             if filter.selectedTriggerTags.isDisjoint(with: dogTags) {
                 return false
             }
         }
-
+        
         return true
     }
-
+    
     
     // Calculate distance in meters between current user and another coordinate
     /// CLLocation.distance(from:) Returns the distance (in meters) from the receiver to the specified location.
@@ -116,15 +124,6 @@ class MatchingViewModel: ObservableObject {
         let userLoc = CLLocation(latitude: user.latitude, longitude: user.longitude)
         let ownerLoc = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         return userLoc.distance(from: ownerLoc)
-    }
-}
-
-// For preview/testing without Firebase
-extension MatchingViewModel {
-    func applyMockData(dogs: [DogModel], users: [UserModel]) {
-        self.allDogs = dogs
-        self.allUsers = users
-        self.userCoordinate = CLLocationCoordinate2D(latitude: 51.5072, longitude: 0.1276) // London fallback
     }
 }
 

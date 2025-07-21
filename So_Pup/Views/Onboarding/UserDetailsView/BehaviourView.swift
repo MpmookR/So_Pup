@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BehaviourView: View {
     @EnvironmentObject var onboardingVM: OnboardingViewModel
+    @EnvironmentObject var optionsService: AppOptionsService
     @Environment(\.presentationMode) var presentationMode
     
     @State private var showAlert = false
@@ -20,7 +21,7 @@ struct BehaviourView: View {
                     showBackButton: true,
                     onBack: onBack
                 )
-                Text("Puppy's Behaviour")
+                Text("\(onboardingVM.dogName)'s Behaviour")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .multilineTextAlignment(.leading)
@@ -30,29 +31,34 @@ struct BehaviourView: View {
                     .foregroundColor(.gray)
                     .italic()
                 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        BehaviourSelection(
-                            title: "Play Style",
-                            options: playStyleOptions,
-                            selectedOptions: $onboardingVM.selectedPlayStyles,
-                            showToggle: true
-                        )
-                        
-                        BehaviourSelection(
-                            title: "Preferred Play Environment",
-                            options: playEnvironmentOptions,
-                            selectedOptions: $onboardingVM.selectedPlayEnvironments,
-                            showToggle: true
-                        )
-                        
-                        BehaviourSelection(
-                            title: "Triggers & Sensitivities",
-                            options: triggerSensitivityOptions,
-                            selectedOptions: $onboardingVM.selectedTriggerSensitivities,
-                            showToggle: true
-                        )
+                if let options = optionsService.options {
+//                    Text("Debug: \(options.playStyleOptions.joined(separator: ", "))")
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 24) {
+                            BehaviourSelection(
+                                title: "Play Style",
+                                options: options.playStyleOptions,
+                                selectedOptions: $onboardingVM.selectedPlayStyles,
+                                showToggle: true
+                            )
+                            
+                            BehaviourSelection(
+                                title: "Preferred Play Environment",
+                                options: options.playEnvironmentOptions,
+                                selectedOptions: $onboardingVM.selectedPlayEnvironments,
+                                showToggle: true
+                            )
+                            
+                            BehaviourSelection(
+                                title: "Triggers & Sensitivities",
+                                options: options.triggerSensitivityOptions,
+                                selectedOptions: $onboardingVM.selectedTriggerSensitivities,
+                                showToggle: true
+                            )
+                        }
                     }
+                } else {
+                    ProgressView("Loading behaviour options...")
                 }
                 
                 Spacer()
@@ -74,6 +80,8 @@ struct BehaviourView: View {
             }
             .padding()
         }
+    
+
         .onTapGesture {
             hideKeyboard()
         }

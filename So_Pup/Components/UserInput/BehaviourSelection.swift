@@ -6,7 +6,7 @@ struct BehaviourSelection: View {
     @Binding var selectedOptions: Set<String>
     var allowsMultipleSelection: Bool = true
     var showToggle: Bool = false
-    var allowCustomTags: Bool = true // New flag
+    var allowCustomTags: Bool = true
     
     @State private var isExpanded: Bool = true
     @State private var showingAddField: Bool = false

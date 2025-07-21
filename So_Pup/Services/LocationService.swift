@@ -36,27 +36,26 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
 
     /// Delegate method: Called when a location is successfully retrieved
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.first else {
-            continuation?.resume(throwing: LocationError.noLocation)
-            continuation = nil
-            return
-        }
+        guard let location = locations.first, let continuation = continuation else { return }
+            
+        self.continuation = nil     // Prevent multiple resumes
 
         manager.stopUpdatingLocation()  // Stop updates after first successful result
 
         // Perform reverse geocoding asynchronously
         Task {
             let city = await reverseGeocode(location)
-            continuation?.resume(returning: (location.coordinate, city))
-            continuation = nil
+            continuation.resume(returning: (location.coordinate, city))
         }
     }
 
     /// Delegate method: Called if location retrieval fails
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        continuation?.resume(throwing: error)
-        continuation = nil
+        guard let continuation = continuation else { return }
+        self.continuation = nil
+        continuation.resume(throwing: error)
     }
+
 
     /// Uses CLGeocoder to resolve a CLLocation into a city name asynchronously.
     private func reverseGeocode(_ location: CLLocation) async -> String? {

@@ -109,17 +109,17 @@ class OnboardingViewModel: ObservableObject {
         
         do {
             // MARK:  initialised them here as te complier cannot process long struct
+            /// This value was parsed from a string input into a strongly typed enum. >> @Published var dogGender = ""        // Raw string from form to enum
             let parsedGender = DogGenderOption(rawValue: dogGender) ?? .male
             let parsedSize = SizeOption(rawValue: dogSize) ?? .medium
             let parsedMode = DogMode(rawValue: mode) ?? .puppy
             let parsedStatus = DogProfileStatus(rawValue: status) ?? .incomplete
+            let neutered = parsedMode == .social ? dogIsNeutered : nil
             
             let healthData: HealthStatus? = parsedMode == .social
-                ? HealthStatus(
-                    fleaTreatmentDate: fleaTreatmentDate,
-                    wormingTreatmentDate: wormingTreatmentDate
-                )
+                ? HealthStatus(fleaTreatmentDate: nil, wormingTreatmentDate: nil)
                 : nil
+
 
             let core1 = parsedMode == .puppy ? coreVaccination1Date : nil
             let core2 = parsedMode == .puppy ? coreVaccination2Date : nil
@@ -161,26 +161,32 @@ class OnboardingViewModel: ObservableObject {
             
             // 4. Create DogModel
             let dog = DogModel(
+                id: uid,
                 name: dogName,
                 gender: parsedGender,
                 size: parsedSize,
                 weight: dogWeight,
                 breed: finalBreed,
                 dob: dogDOB,
-                isNeutered: dogIsNeutered,
+                isNeutered: neutered,
                 behavior: behaviorData,
                 healthStatus: healthData,
                 coreVaccination1Date: core1,
                 coreVaccination2Date: core2,
                 mode: parsedMode,
                 status: parsedStatus,
-                imageURLs: dogImageURLs
+                imageURLs: dogImageURLs,
+                isMock: false
+
             )
             
             
             // 5. Save dog
             let dogRef = db.collection("dogs").document(uid) //Use the userId as dog document ID (1:1 relationship)
-            try dogRef.setData(from: dog)
+//            try dogRef.setData(from: dog)
+            var dogToSave = dog
+            dogToSave.id = uid // Set dog.id to match Firestore doc ID
+            try dogRef.setData(from: dogToSave)
             print("✅ Saved dog data successfully")
             
             
@@ -198,11 +204,11 @@ class OnboardingViewModel: ObservableObject {
                 profilePictureURL: profileURL ?? "",
                 location: location,
                 coordinate: coordinate,
+                locationPermissionDenied: userCoordinate == nil,
                 bio: bio,
                 languages: languages,
                 customLanguage: nil,
-                dogId: dogRef.documentID,
-                locationPermissionDenied: userCoordinate == nil
+                dogId: dogRef.documentID
             )
             
             // 8. Save user

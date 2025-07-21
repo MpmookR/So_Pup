@@ -9,22 +9,19 @@ struct MockDogData {
         weight: 14.0,
         breed: "Labrador",
         dob: Calendar.current.date(byAdding: .weekOfYear, value: -8, to: Date())!,
-        isNeutered: nil,
-        behavior: nil,
-        healthStatus: nil,
         coreVaccination1Date: Calendar.current.date(byAdding: .weekOfYear, value: -6, to: Date())!,
         coreVaccination2Date: Calendar.current.date(byAdding: .weekOfYear, value: -7, to: Date())!,
         mode: .puppy,
         status: .incomplete,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/e24bfbd855cda99e303975f2bd2a1bf43079b320-800x600.webp?updatedAt=1751894023966",
-                    "https://placedog.net/800/600?id=11",
-                    "https://placedog.net/800/600?id=12",
-                    "https://placedog.net/800/600?id=13",
-                    "https://placedog.net/800/600?id=14"],
+        imageURLs: [
+            "https://placedog.net/800/600?id=19",
+            "https://images.pexels.com/photos/20449895/pexels-photo-20449895.jpeg",
+            "https://images.pexels.com/photos/16299037/pexels-photo-16299037.jpeg"
+        ],
         bio: "Hey, I’m Bean! Small in size, huge in cuddles. I love belly rubs and sniffing leaves.",
         isMock: true
     )
-    
+
     static let dog2 = DogModel(
         id: "dog2",
         name: "Bella",
@@ -46,15 +43,16 @@ struct MockDogData {
             fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
             wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
         ),
-        coreVaccination1Date: nil,
-        coreVaccination2Date: nil,
         mode: .social,
         status: .ready,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/202104iStock-1257560195-scaled-1.avif?updatedAt=1751894024122"],
+        imageURLs: [
+            "https://ik.imagekit.io/3vzopuoqs/soPup/202104iStock-1257560195-scaled-1.avif?updatedAt=1751894024122",
+            "https://images.pexels.com/photos/1294062/pexels-photo-1294062.jpeg"
+        ],
         bio: "Hi, I’m Bella! I’m all about zoomies and ball chasing. Let’s play at the park!",
         isMock: true
     )
-    
+
     static let dog3 = DogModel(
         id: "dog3",
         name: "Ryu",
@@ -76,15 +74,15 @@ struct MockDogData {
             fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
             wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
         ),
-        coreVaccination1Date: nil,
-        coreVaccination2Date: nil,
         mode: .social,
         status: .incomplete,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/907aa7439656710f3aeb351075b6decc.jpg?updatedAt=1751894023914"],
+        imageURLs: [
+            "https://ik.imagekit.io/3vzopuoqs/soPup/907aa7439656710f3aeb351075b6decc.jpg?updatedAt=1751894023914"
+        ],
+        bio: "Speed and smarts! Ryu’s my name, and chasing things is my game.",
         isMock: true
-        
     )
-    
+
     static let dog4 = DogModel(
         id: "dog4",
         name: "Kuma",
@@ -106,13 +104,15 @@ struct MockDogData {
             fleaTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
             wormingTreatmentDate: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
         ),
-        coreVaccination1Date: nil,
-        coreVaccination2Date: nil,
         mode: .social,
         status: .ready,
-        imageURLs: ["https://ik.imagekit.io/3vzopuoqs/soPup/IMG_9823.jpeg?updatedAt=1751894024537"],
+        imageURLs: [
+            "https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg",
+            "https://images.pexels.com/photos/16029611/pexels-photo-16029611.jpeg"
+        ],
+        bio: "Kuma here — majestic, mysterious, and ready to make new friends.",
         isMock: true
     )
-    
+
     static let all: [DogModel] = [dog1, dog2, dog3, dog4]
 }

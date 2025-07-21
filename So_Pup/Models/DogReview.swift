@@ -1,17 +1,19 @@
 import Foundation
 
 struct DogReview: Identifiable, Codable {
-    let id: String
-    let meetupId: String
+    var id: String
+    var meetupId: String
     
-    let reviewedDogId: String      // The dog being reviewed
+    var reviewedDogId: String      // The dog being reviewed
 
-    let reviewerDogId: String      // The dog who left the review
-    let reviewerDogName: String
-    let reviewerDogImageURL: String
+    var reviewerDogId: String      // The dog who left the review
+    var reviewerDogName: String
+    var reviewerDogImageURL: String
     
-    let date: Date
-    let reviewText: String
+    var date: Date
+    var reviewText: String
+    
+    var isMock: Bool = false
 }
 
 

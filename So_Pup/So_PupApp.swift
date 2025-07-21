@@ -9,9 +9,12 @@ struct SoPupApp: App {
     
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var onboardingViewModel = OnboardingViewModel()
+    @StateObject private var appOptionsService = AppOptionsService()
+
     
     init() {
         FirebaseApp.configure()
+
     }
     
     var body: some Scene {
@@ -19,11 +22,12 @@ struct SoPupApp: App {
             RootView()
                 .environmentObject(authViewModel)
                 .environmentObject(onboardingViewModel)
+                .environmentObject(appOptionsService) 
                 .modelContainer(for: DogFilterSettingsModel.self)
             
-            // Check login + onboarding status as early as possible
                 .task {
-                    await authViewModel.checkAuthStatus()
+                    await authViewModel.checkAuthStatus() // check login user
+                    await appOptionsService.fetchOptions()
                 }
         }
     }
