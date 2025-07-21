@@ -81,18 +81,22 @@ struct FullDogDetailsView: View {
     }
 }
 
-#Preview {
-    let dog = MockDogData.dog3
-    let owner = MockUserData.user3
-    let coordinate = MockUserData.user3.coordinate
-    let dogReviews = MockDogReviewData.all.filter { $0.reviewedDogId == dog.id }
-    
-    return NavigationView {
-        FullDogDetailsView(
-            dog: dog,
-            owner: owner,
-            userCoordinate: coordinate,
-            reviews: dogReviews
-        )
-    }
-}
+//#Preview {
+//    var dog = MockDogData.dog3
+//    let owner = MockUserData.user3
+//    dog.ownerId = owner.id
+//
+//    let coordinate = owner.coordinate
+//    let dogReviews = MockDogReviewData.all.filter { $0.reviewedDogId == dog.id }
+//
+//    NavigationView {
+//        FullDogDetailsView(
+//            dog: dog,
+//            owner: owner,
+//            userCoordinate: coordinate,
+//            reviews: dogReviews
+//        )
+//    }
+//}
+
+

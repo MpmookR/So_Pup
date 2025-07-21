@@ -58,8 +58,8 @@ class MatchingViewModel: ObservableObject {
         }
         // Build matched profiles by checking all dogs against filters
         matchedProfiles = allDogs.compactMap { dog -> MatchProfile? in
-            guard let owner = allUsers.first(where: { $0.dogId == dog.id }) else { return nil }
-            
+            guard let owner = allUsers.first(where: { $0.id == dog.ownerId }) else { return nil }
+
             // Skip if this dog belongs to the current user
             if owner.id == currentUserId {
                 return nil
@@ -71,7 +71,7 @@ class MatchingViewModel: ObservableObject {
             }
             
             // Calculate distance between user and dog owner
-            let dist = distance(from: userLoc, to: owner.coordinate)
+            let dist = calculateDistance(from: userLoc, to: owner.coordinate)
             
             // filter by the max distance
             /// when maxDistanceInKm < 100 - no distance limit applies
@@ -120,7 +120,7 @@ class MatchingViewModel: ObservableObject {
     
     // Calculate distance in meters between current user and another coordinate
     /// CLLocation.distance(from:) Returns the distance (in meters) from the receiver to the specified location.
-    private func distance(from user: CLLocationCoordinate2D, to coordinate: Coordinate) -> CLLocationDistance {
+    private func calculateDistance(from user: CLLocationCoordinate2D, to coordinate: Coordinate) -> CLLocationDistance {
         let userLoc = CLLocation(latitude: user.latitude, longitude: user.longitude)
         let ownerLoc = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         return userLoc.distance(from: ownerLoc)

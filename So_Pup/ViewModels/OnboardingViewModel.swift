@@ -20,7 +20,7 @@ class OnboardingViewModel: ObservableObject {
     @Published var userCoordinate: CLLocationCoordinate2D?
     @Published var locationErrorMessage: String?
     @Published var locationPermissionDenied: Bool = false
-
+    
     
     // Dog
     @Published var dogName = ""
@@ -63,7 +63,7 @@ class OnboardingViewModel: ObservableObject {
     
     @Published var mode = "puppy"
     @Published var status = "incomplete"
-
+    
     // check mode based on dog DOB
     func determineMode() {
         let age = Calendar.current.dateComponents([.weekOfYear], from: dogDOB, to: Date()).weekOfYear ?? 0
@@ -73,25 +73,25 @@ class OnboardingViewModel: ObservableObject {
     // fetch user location
     func fetchUserLocation() async {
         let service = LocationService()
-
+        
         do {
             // Attempt to fetch coordinate and city from CoreLocation
             let result = try await service.requestLocation()
-
+            
             // Store successful location and clear previous errors
             self.userCoordinate = result.coordinate
             self.location = result.city ?? "Unknown"
             self.locationPermissionDenied = false
             self.locationErrorMessage = nil
             print("📍 Location fetched: \(result.coordinate), City: \(result.city ?? "-")")
-
+            
         } catch LocationService.LocationError.permissionDenied {
             // User explicitly denied location access
             self.userCoordinate = nil
             self.location = "Unknown"
             self.locationPermissionDenied = true
             self.locationErrorMessage = "You’ve denied location access. This means matching and visibility based on your location won’t work properly."
-
+            
         } catch {
             // Other failure (e.g., system error, timeout)
             self.userCoordinate = nil
@@ -101,53 +101,43 @@ class OnboardingViewModel: ObservableObject {
             print("❌ Location error: \(error.localizedDescription)")
         }
     }
-
     
     func saveToFirebase() async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
-        
+
         do {
-            // MARK:  initialised them here as te complier cannot process long struct
-            /// This value was parsed from a string input into a strongly typed enum. >> @Published var dogGender = ""        // Raw string from form to enum
+            // MARK: - Parse enums and conditionals
             let parsedGender = DogGenderOption(rawValue: dogGender) ?? .male
             let parsedSize = SizeOption(rawValue: dogSize) ?? .medium
             let parsedMode = DogMode(rawValue: mode) ?? .puppy
             let parsedStatus = DogProfileStatus(rawValue: status) ?? .incomplete
             let neutered = parsedMode == .social ? dogIsNeutered : nil
-            
-            let healthData: HealthStatus? = parsedMode == .social
-                ? HealthStatus(fleaTreatmentDate: nil, wormingTreatmentDate: nil)
+            let healthData = parsedMode == .social ? HealthStatus(fleaTreatmentDate: nil, wormingTreatmentDate: nil) : nil
+            let core1 = parsedMode == .puppy ? coreVaccination1Date : nil
+            let core2 = parsedMode == .puppy ? coreVaccination2Date : nil
+            let finalBreed = mixedBreed.isEmpty ? dogBreed : mixedBreed
+
+            // MARK: - Upload profile picture (if any)
+            let profilePictureURL: String? = profilePicture != nil
+                ? try await FirebaseMediaService.shared.uploadImage(
+                    profilePicture,
+                    path: "users/\(uid)/profile.jpg"
+                )
                 : nil
 
 
-            let core1 = parsedMode == .puppy ? coreVaccination1Date : nil
-            let core2 = parsedMode == .puppy ? coreVaccination2Date : nil
-            
-            // 1. Upload profile picture
-            var profileURL: String? = nil
-            if let profileImage = profilePicture {
-                print("⚠️ Is profilePicture nil? \(profilePicture == nil)")
+            // MARK: - Upload only 1 dog image during onboarding
+            let dogImageURLs = try await FirebaseMediaService.shared.uploadImages(
+                dogImages,
+                pathPrefix: "dogs/\(uid)/",
+                limit: 1 // Only 1 image during onboarding
+            )
 
-                profileURL = try await FirebaseStorageService.shared.uploadImage(
-                    profileImage,
-                    path: "users/\(uid)/profile.jpg"
-                )
-            }
+            print("✅ Uploaded profile and dog image(s)")
 
-            // 2. Upload dog images
-            var dogImageURLs: [String] = []
-            for (index, image) in dogImages.prefix(5).enumerated() {
-                let path = "dogs/\(uid)/\(index).jpg"
-                let url = try await FirebaseStorageService.shared.uploadImage(image, path: path)
-                dogImageURLs.append(url)
-            }
-            print("✅ Uploaded dog images")
-
-            
-            // 3. Prepare DogBehavior (for dogs >= 12 weeks)
-            // save dog's behavior only for socail mode user
-            let behaviorData: DogBehavior? = mode == "social" ? DogBehavior(
+            // MARK: - Prepare DogBehavior if in social mode
+            let behaviorData: DogBehavior? = parsedMode == .social ? DogBehavior(
                 playStyles: Array(selectedPlayStyles),
                 preferredPlayEnvironments: Array(selectedPlayEnvironments),
                 triggersAndSensitivities: Array(selectedTriggerSensitivities),
@@ -155,13 +145,11 @@ class OnboardingViewModel: ObservableObject {
                 customPlayEnvironment: customPlayEnvironment,
                 customTriggerSensitivity: customTriggerSensitivity
             ) : nil
-            
-            
-            let finalBreed = mixedBreed.isEmpty ? dogBreed : mixedBreed
-            
-            // 4. Create DogModel
+
+            // MARK: - Create dog model
             let dog = DogModel(
-                id: uid,
+                id: uid, // Temp placeholder; will overwrite if needed
+                ownerId: uid,
                 name: dogName,
                 gender: parsedGender,
                 size: parsedSize,
@@ -177,48 +165,82 @@ class OnboardingViewModel: ObservableObject {
                 status: parsedStatus,
                 imageURLs: dogImageURLs,
                 isMock: false
-
             )
+
+            // MARK: - Save or reuse existing dog
+//            let existingDogs = try await db.collection("dogs")
+//                .whereField("ownerId", isEqualTo: uid)
+//                .getDocuments()
+//
+//            let dogId: String
+//            if let existing = existingDogs.documents.first {
+//                dogId = existing.documentID
+//                print("⚠️ Dog already exists, using existing dog ID.")
+//            } else {
+//                let dogRef = db.collection("dogs").document()
+//                dogId = dogRef.documentID
+//
+//                var dogToSave = dog
+//                dogToSave.id = dogId
+//                try dogRef.setData(from: dogToSave)
+//                print("✅ New dog profile saved")
+//            }
             
-            
-            // 5. Save dog
-            let dogRef = db.collection("dogs").document(uid) //Use the userId as dog document ID (1:1 relationship)
-//            try dogRef.setData(from: dog)
+            // MARK: - Save or update dog profile
+            let existingDogs = try await db.collection("dogs")
+                .whereField("ownerId", isEqualTo: uid)
+                .getDocuments()
+
+            let dogRef: DocumentReference
+            let dogId: String
+
+            if let existing = existingDogs.documents.first {
+                dogId = existing.documentID
+                dogRef = db.collection("dogs").document(dogId)
+                print("⚠️ Dog already exists, updating document")
+            } else {
+                dogRef = db.collection("dogs").document()
+                dogId = dogRef.documentID
+                print("✅ Creating new dog document")
+            }
+
             var dogToSave = dog
-            dogToSave.id = uid // Set dog.id to match Firestore doc ID
+            dogToSave.id = dogId
             try dogRef.setData(from: dogToSave)
-            print("✅ Saved dog data successfully")
-            
-            
-            // 6. Prepare user coordinate
+            print("✅ Dog profile saved or updated")
+
+
+            // MARK: - Prepare coordinate data
             let coordinate = Coordinate(
                 latitude: userCoordinate?.latitude ?? 0,
                 longitude: userCoordinate?.longitude ?? 0
             )
 
-            // 7. Create UserModel
+            // MARK: - Create user model
             let user = UserModel(
                 id: uid,
                 name: name,
                 gender: UserGenderOption(rawValue: gender) ?? .other,
-                profilePictureURL: profileURL ?? "",
+                profilePictureURL: profilePictureURL ?? "",
                 location: location,
                 coordinate: coordinate,
                 locationPermissionDenied: userCoordinate == nil,
                 bio: bio,
                 languages: languages,
                 customLanguage: nil,
-                dogId: dogRef.documentID
+                primaryDogId: dogId
             )
-            
-            // 8. Save user
+
+            // MARK: - Save user model
             try db.collection("users").document(uid).setData(from: user)
-            print("✅ Saved user data successfully")
-            
+            print("✅ User profile saved")
+
         } catch {
-            print("❌ Error saving data to Firestore: \(error.localizedDescription)")
+            print("❌ Error saving to Firestore: \(error.localizedDescription)")
         }
     }
+
+ 
 }
 
 
