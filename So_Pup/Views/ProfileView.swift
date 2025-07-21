@@ -62,7 +62,7 @@ struct ProfileView: View {
         do {
             let user = try await profileService.fetchUser(by: uid)
             self.currentUser = user
-            if let dogId = user?.dogId {
+            if let dogId = user?.primaryDogId {
                 self.currentDog = try await profileService.fetchDog(by: dogId)
             }
         } catch {

@@ -2,6 +2,9 @@ import Foundation
 
 struct DogModel: Identifiable, Codable, DogProfile, PuppyProfile, SocialDogProfile {
     var id: String = UUID().uuidString
+    
+    var ownerId: String
+    
     var name: String
     var gender: DogGenderOption
     var size: SizeOption

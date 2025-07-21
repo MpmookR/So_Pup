@@ -12,7 +12,7 @@ struct MockUserData {
         bio: "Proud puppy mum to Bean. Still figuring out toilet training and chew-proofing my shoes.",
         languages: ["English", "French"],
         customLanguage: nil,
-        dogId: "dog1",
+        primaryDogId: "dog1",
         isMock: true
 
     )
@@ -28,7 +28,7 @@ struct MockUserData {
         bio: "Weekend adventurer with Bella, my 4-year-old zoom queen and park buddy.",
         languages: ["English", "Spanish"],
         customLanguage: nil,
-        dogId: "dog2",
+        primaryDogId: "dog2",
         isMock: true
 
     )
@@ -44,7 +44,7 @@ struct MockUserData {
         bio: "Trying to keep up with Ryu’s energy! Training, chasing, and lots of fetch in Bristol.",
         languages: ["English", "Vietnamese"],
         customLanguage: nil,
-        dogId: "dog3",
+        primaryDogId: "dog3",
         isMock: true
 
     )
@@ -60,7 +60,7 @@ struct MockUserData {
         bio: nil,
         languages: ["English", "Italian"],
         customLanguage: nil,
-        dogId: "dog4",
+        primaryDogId: "dog4",
         isMock: true
     )
 

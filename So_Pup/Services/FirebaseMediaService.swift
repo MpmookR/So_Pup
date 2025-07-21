@@ -9,8 +9,8 @@ enum FirebaseStorageError: Error {
     case uploadFailed(String)
 }
 
-class FirebaseStorageService {
-    static let shared = FirebaseStorageService()
+class FirebaseMediaService {
+    static let shared = FirebaseMediaService()
     private init() {}
    
     /// https://firebase.google.com/docs/storage/ios/upload-files?
@@ -48,6 +48,25 @@ class FirebaseStorageService {
                 throw FirebaseStorageError.uploadFailed(error.localizedDescription)
             }
     }
+    
+    /// Uploads multiple images to Firebase Storage and returns their download URLs
+    /// - Parameters:
+    ///   - images: Array of UIImage
+    ///   - pathPrefix: Folder path (e.g. "dogs/{uid}/")
+    ///   - limit: Optional max number of images (default = all)
+    /// - Returns: Array of download URL strings
+    func uploadImages(_ images: [UIImage], pathPrefix: String, limit: Int? = nil) async throws -> [String] {
+        var urls: [String] = []
+
+        for (index, image) in images.prefix(limit ?? images.count).enumerated() {
+            let path = "\(pathPrefix)\(index).jpg"
+            let url = try await uploadImage(image, path: path)
+            urls.append(url)
+        }
+
+        return urls
+    }
+
 
     func deleteImage(atPath path: String) async throws {
         let ref = Storage.storage().reference().child(path)

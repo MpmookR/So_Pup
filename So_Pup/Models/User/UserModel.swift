@@ -18,10 +18,10 @@ struct UserModel: Identifiable, Codable {
     var customLanguage: String?
 
     // Dog Link
-    var dogId: String
+    var primaryDogId: String
 
     // Testing
-//    var isMock: Bool = false
+    // var isMock: Bool = false
     var isMock: Bool?
 
 }

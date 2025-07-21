@@ -3,6 +3,7 @@ import Foundation
 struct MockDogData {
     static let dog1 = DogModel(
         id: "dog1",
+        ownerId: "user1",
         name: "Bean",
         gender: .male,
         size: .small,
@@ -24,6 +25,7 @@ struct MockDogData {
 
     static let dog2 = DogModel(
         id: "dog2",
+        ownerId: "user2",
         name: "Bella",
         gender: .female,
         size: .medium,
@@ -55,6 +57,7 @@ struct MockDogData {
 
     static let dog3 = DogModel(
         id: "dog3",
+        ownerId: "user3",
         name: "Ryu",
         gender: .male,
         size: .medium,
@@ -85,6 +88,7 @@ struct MockDogData {
 
     static let dog4 = DogModel(
         id: "dog4",
+        ownerId: "user4",
         name: "Kuma",
         gender: .male,
         size: .medium,
