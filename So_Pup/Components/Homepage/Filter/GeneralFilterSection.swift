@@ -3,7 +3,7 @@ import SwiftUI
 struct GeneralFilterSection: View {
     @Binding var filterSettings: DogFilterSettings
     let allSizes: [SizeOption] = SizeOption.allCases
-
+    
     // Local bindings to avoid inline complexity
     private var genderBinding: Binding<DogGenderOption?> {
         Binding(
@@ -18,17 +18,17 @@ struct GeneralFilterSection: View {
             set: { filterSettings.selectedHealthStatus = $0 }
         )
     }
-
+    
     private var neuteredBinding: Binding<Bool> {
         Binding(
             get: { filterSettings.neuteredOnly ?? false },
             set: { filterSettings.neuteredOnly = $0 }
         )
     }
-
+    
     var body: some View {
         VStack(spacing: 24) {
-
+            
             // Distance Section
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -53,38 +53,65 @@ struct GeneralFilterSection: View {
                         in: 1...100,
                         step: 1
                     )
-                    .accentColor(.socialButton) 
+                    .accentColor(.socialButton)
                 }
                 .padding(.vertical, 8)
-
+                
                 Divider()
             }
-
+            
             // General Info Section
             VStack(alignment: .leading, spacing: 16) {
                 Text("General")
                     .fontWeight(.bold)
-
+                
                 VStack(alignment: .leading, spacing: 8){
                     Text("Gender")
                         .font(.body)
                     // Gender Picker
                     Picker("Gender", selection: genderBinding) {
                         Text("All").tag(DogGenderOption?.none)
-                            ForEach(DogGenderOption.allCases, id: \.self) { gender in
-                                Text(gender.rawValue.capitalized).tag(Optional(gender))
+                        ForEach(DogGenderOption.allCases, id: \.self) { gender in
+                            Text(gender.rawValue.capitalized).tag(Optional(gender))
                             
                         }
                     }
                     .pickerStyle(.segmented)
                 }
                 
+                // Health Verification Picker
+                VStack(alignment: .leading, spacing: 8){
+                    Text("Health Status")
+                        .font(.body)
+                    Picker("Health Status", selection: healthBinding) {
+                        Text("All").tag(HealthVerificationStatus?.none)
+                        ForEach(HealthVerificationStatus.allCases, id: \.self) { status in
+                            Text(status.rawValue.capitalized).tag(Optional(status))
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    
+                }
+                // age
+                // Age Range Picker
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Preferred Age")
+                        .font(.body)
+                    
+                    Picker("Preferred Age", selection: $filterSettings.preferredAgeOption) {
+                        ForEach(PreferredAgeOption.allCases) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
 
+                
                 // Size Multi-select
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Size")
                         .font(.body)
-
+                    
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 8)]) {
                         ForEach(allSizes, id: \.self) { size in
                             let isSelected = filterSettings.selectedSizes.contains(size)
@@ -107,25 +134,11 @@ struct GeneralFilterSection: View {
                         }
                     }
                 }
-
-                // Health Verification Picker
-                VStack(alignment: .leading, spacing: 8){
-                    Text("Health Status")
-                        .font(.body)
-                    Picker("Health Status", selection: healthBinding) {
-                        Text("All").tag(HealthVerificationStatus?.none)
-                        ForEach(HealthVerificationStatus.allCases, id: \.self) { status in
-                            Text(status.rawValue.capitalized).tag(Optional(status))
-                        }
-                    }
-                    .pickerStyle(.segmented)
-
-                }
-
+                
                 // Neutered Toggle
                 Toggle("Neutered Only", isOn: neuteredBinding)
                     .toggleStyle(SwitchToggleStyle(tint: Color.socialButton))
-
+                
             }
         }
     }
@@ -139,7 +152,7 @@ struct GeneralFilterSection: View {
         selectedHealthStatus: .verified,
         neuteredOnly: true
     )
-
+    
     GeneralFilterSection(filterSettings: $tempSettings)
         .padding()
 }

@@ -106,5 +106,26 @@ let triggerSensitivityOptions: [String] = [
 ]
 
 
+// MARK: - not in firestore yet
+
+enum PreferredAgeOption: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
+
+    case puppyAge = "12w – 1y"
+    case teenageAge = "1y – 3y"
+    case adultAge = "3y+"
+    case any = "Any"
+
+    var ageRange: ClosedRange<Double>? {
+        switch self {
+        case .puppyAge: return 0.23...1
+        case .teenageAge: return 1...3
+        case .adultAge: return 3...20
+        case .any: return nil
+        }
+    }
+}
+
+
 
 

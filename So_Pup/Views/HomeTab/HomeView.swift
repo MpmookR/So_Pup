@@ -8,6 +8,7 @@ struct HomeView: View {
     @StateObject private var matchingVM = MatchingViewModel()
     @State private var selectedProfile: MatchProfile? = nil
     
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     
     var body: some View {
@@ -96,22 +97,33 @@ struct HomeView: View {
                         )
                     }
                 }
-                
                 .sheet(isPresented: $showFilterSheet) {
                     FilterDetailSheet(
                         filterSettings: $filterSettings,
                         onDismiss: {
                             showFilterSheet = false
-                            filterService.saveFilterSettings(filterSettings) // Save with SwiftData
-                            matchingVM.applyMatching(using: filterSettings)
-                        }
+                            filterService.saveFilterSettings(filterSettings)
+                        },
+                        onApply: { scoredDogs in
+                            matchingVM.updateScoredMatches(scoredDogs)
+                        },
+                        currentDog: matchingVM.currentDog,
+                        candidateIds: matchingVM.candidateDogIds,
+                        userCoordinate: matchingVM.userCoordinate.map(Coordinate.init)  //map init to uniformity and Firestore compatibility
                     )
                 }
+                
                 .task {
+                    // Load from SwiftData
                     filterSettings = filterService.loadFilterSettings()
+                    
+                    // Load match data from Firestore + apply backend scoring with the loaded filter
                     await matchingVM.load()
-                    matchingVM.applyMatching(using: filterSettings)
+                    
+                    // Apply filter-based scoring
+                    await matchingVM.applyScoring(using: filterSettings)
                 }
+
             }
         }
     }

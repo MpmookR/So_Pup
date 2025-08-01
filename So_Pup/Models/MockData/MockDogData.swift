@@ -20,6 +20,7 @@ struct MockDogData {
             "https://images.pexels.com/photos/16299037/pexels-photo-16299037.jpeg"
         ],
         bio: "Hey, I’m Bean! Small in size, huge in cuddles. I love belly rubs and sniffing leaves.",
+        coordinate: Coordinate(latitude: 51.5074, longitude: -0.1278),
         isMock: true
     )
 
@@ -52,6 +53,7 @@ struct MockDogData {
             "https://images.pexels.com/photos/1294062/pexels-photo-1294062.jpeg"
         ],
         bio: "Hi, I’m Bella! I’m all about zoomies and ball chasing. Let’s play at the park!",
+        coordinate: Coordinate(latitude: 53.4808, longitude: -2.2426),
         isMock: true
     )
 
@@ -83,6 +85,7 @@ struct MockDogData {
             "https://ik.imagekit.io/3vzopuoqs/soPup/907aa7439656710f3aeb351075b6decc.jpg?updatedAt=1751894023914"
         ],
         bio: "Speed and smarts! Ryu’s my name, and chasing things is my game.",
+        coordinate: Coordinate(latitude: 51.4545, longitude: -2.5879),
         isMock: true
     )
 
@@ -115,6 +118,7 @@ struct MockDogData {
             "https://images.pexels.com/photos/16029611/pexels-photo-16029611.jpeg"
         ],
         bio: "Kuma here — majestic, mysterious, and ready to make new friends.",
+        coordinate: Coordinate(latitude: 55.9533, longitude: -3.1883),
         isMock: true
     )
 

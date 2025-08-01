@@ -13,6 +13,7 @@ class DogFilterSettingsModel {
     var selectedTriggerTags: [String]
     var selectedHealthStatusRaw: String?
     var neuteredOnly: Bool?
+    var preferredAgeOptionRaw: String
 
     init(
         maxDistanceInKm: Int = 60,
@@ -22,7 +23,8 @@ class DogFilterSettingsModel {
         selectedEnvironmentTags: [String] = [],
         selectedTriggerTags: [String] = [],
         selectedHealthStatusRaw: String? = nil,
-        neuteredOnly: Bool? = nil
+        neuteredOnly: Bool? = nil,
+        preferredAgeOptionRaw: String = PreferredAgeOption.any.rawValue
     ) {
         self.maxDistanceInKm = maxDistanceInKm
         self.selectedGenderRaw = selectedGenderRaw
@@ -32,6 +34,7 @@ class DogFilterSettingsModel {
         self.selectedTriggerTags = selectedTriggerTags
         self.selectedHealthStatusRaw = selectedHealthStatusRaw
         self.neuteredOnly = neuteredOnly
+        self.preferredAgeOptionRaw = preferredAgeOptionRaw
     }
 }
 
@@ -45,6 +48,7 @@ extension DogFilterSettingsModel {
             maxDistanceInKm: self.maxDistanceInKm,
             selectedGender: DogGenderOption(rawValue: self.selectedGenderRaw ?? ""),
             selectedSizes: Set(self.selectedSizes.compactMap { SizeOption(rawValue: $0) }),
+            preferredAgeOption: PreferredAgeOption(rawValue: self.preferredAgeOptionRaw) ?? .any,
             selectedPlayStyleTags: Set(self.selectedPlayStyleTags),
             selectedEnvironmentTags: Set(self.selectedEnvironmentTags),
             selectedTriggerTags: Set(self.selectedTriggerTags),
@@ -64,7 +68,8 @@ extension DogFilterSettingsModel {
             selectedEnvironmentTags: Array(settings.selectedEnvironmentTags),
             selectedTriggerTags: Array(settings.selectedTriggerTags),
             selectedHealthStatusRaw: settings.selectedHealthStatus?.rawValue,
-            neuteredOnly: settings.neuteredOnly
+            neuteredOnly: settings.neuteredOnly,
+            preferredAgeOptionRaw: settings.preferredAgeOption.rawValue
         )
     }
 }

@@ -4,15 +4,19 @@ import CoreLocation
 struct Coordinate: Codable {
     var latitude: Double
     var longitude: Double
+    var geohash: String?
 }
 
 extension Coordinate {
     
     //convert a CLLocationCoordinate2D into custom Coordinate 
     init(from clLocation: CLLocationCoordinate2D) {
-            self.latitude = clLocation.latitude
-            self.longitude = clLocation.longitude
-        }
+        let lat = clLocation.latitude
+        let lon = clLocation.longitude
+        self.latitude = lat
+        self.longitude = lon
+        self.geohash = GeoHash.encode(latitude: lat, longitude: lon) // generating the geohash 
+    }
     
     func distance(from other: Coordinate) -> CLLocationDistance {
         let selfLoc = CLLocation(latitude: self.latitude, longitude: self.longitude)

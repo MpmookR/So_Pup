@@ -4,7 +4,8 @@ import FirebaseCore
 import FirebaseAuth
 import FirebaseStorage
 import CoreLocation
-
+import GeoFire
+import GeoFireUtils
 
 ///https://firebase.google.com/docs/storage/ios/start?
 @MainActor
@@ -105,7 +106,7 @@ class OnboardingViewModel: ObservableObject {
     func saveToFirebase() async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
-
+        
         do {
             // MARK: - Parse enums and conditionals
             let parsedGender = DogGenderOption(rawValue: dogGender) ?? .male
@@ -117,25 +118,21 @@ class OnboardingViewModel: ObservableObject {
             let core1 = parsedMode == .puppy ? coreVaccination1Date : nil
             let core2 = parsedMode == .puppy ? coreVaccination2Date : nil
             let finalBreed = mixedBreed.isEmpty ? dogBreed : mixedBreed
-
+            
             // MARK: - Upload profile picture (if any)
             let profilePictureURL: String? = profilePicture != nil
-                ? try await FirebaseMediaService.shared.uploadImage(
-                    profilePicture,
-                    path: "users/\(uid)/profile.jpg"
-                )
-                : nil
-
-
+            ? try await FirebaseMediaService.shared.uploadImage( profilePicture, path: "users/\(uid)/profile.jpg"): nil
+            
+            
             // MARK: - Upload only 1 dog image during onboarding
             let dogImageURLs = try await FirebaseMediaService.shared.uploadImages(
                 dogImages,
                 pathPrefix: "dogs/\(uid)/",
                 limit: 1 // Only 1 image during onboarding
             )
-
+            
             print("✅ Uploaded profile and dog image(s)")
-
+            
             // MARK: - Prepare DogBehavior if in social mode
             let behaviorData: DogBehavior? = parsedMode == .social ? DogBehavior(
                 playStyles: Array(selectedPlayStyles),
@@ -145,10 +142,25 @@ class OnboardingViewModel: ObservableObject {
                 customPlayEnvironment: customPlayEnvironment,
                 customTriggerSensitivity: customTriggerSensitivity
             ) : nil
+            
+            // MARK: - Prepare coordinate data
+            let lat = userCoordinate?.latitude ?? 0
+            let lng = userCoordinate?.longitude ?? 0
+            let geoHash = GFUtils.geoHash(forLocation: CLLocationCoordinate2D(latitude: lat, longitude: lng))
 
+            let coordinate = Coordinate(
+                latitude: lat,
+                longitude: lng,
+                geohash: geoHash 
+            )
+            
+            let dogId = try await getOrCreateDogId(for: uid, db: db)
+            let dogRef = db.collection("dogs").document(dogId)
+            let userRef = db.collection("users").document(uid)
+            
             // MARK: - Create dog model
-            let dog = DogModel(
-                id: uid, // Temp placeholder; will overwrite if needed
+            var dog = DogModel( //using var as dog id is assigned after creation
+                id: dogId,
                 ownerId: uid,
                 name: dogName,
                 gender: parsedGender,
@@ -164,58 +176,10 @@ class OnboardingViewModel: ObservableObject {
                 mode: parsedMode,
                 status: parsedStatus,
                 imageURLs: dogImageURLs,
+                coordinate: coordinate,
                 isMock: false
             )
-
-            // MARK: - Save or reuse existing dog
-//            let existingDogs = try await db.collection("dogs")
-//                .whereField("ownerId", isEqualTo: uid)
-//                .getDocuments()
-//
-//            let dogId: String
-//            if let existing = existingDogs.documents.first {
-//                dogId = existing.documentID
-//                print("⚠️ Dog already exists, using existing dog ID.")
-//            } else {
-//                let dogRef = db.collection("dogs").document()
-//                dogId = dogRef.documentID
-//
-//                var dogToSave = dog
-//                dogToSave.id = dogId
-//                try dogRef.setData(from: dogToSave)
-//                print("✅ New dog profile saved")
-//            }
             
-            // MARK: - Save or update dog profile
-            let existingDogs = try await db.collection("dogs")
-                .whereField("ownerId", isEqualTo: uid)
-                .getDocuments()
-
-            let dogRef: DocumentReference
-            let dogId: String
-
-            if let existing = existingDogs.documents.first {
-                dogId = existing.documentID
-                dogRef = db.collection("dogs").document(dogId)
-                print("⚠️ Dog already exists, updating document")
-            } else {
-                dogRef = db.collection("dogs").document()
-                dogId = dogRef.documentID
-                print("✅ Creating new dog document")
-            }
-
-            var dogToSave = dog
-            dogToSave.id = dogId
-            try dogRef.setData(from: dogToSave)
-            print("✅ Dog profile saved or updated")
-
-
-            // MARK: - Prepare coordinate data
-            let coordinate = Coordinate(
-                latitude: userCoordinate?.latitude ?? 0,
-                longitude: userCoordinate?.longitude ?? 0
-            )
-
             // MARK: - Create user model
             let user = UserModel(
                 id: uid,
@@ -230,17 +194,35 @@ class OnboardingViewModel: ObservableObject {
                 customLanguage: nil,
                 primaryDogId: dogId
             )
-
-            // MARK: - Save user model
-            try db.collection("users").document(uid).setData(from: user)
-            print("✅ User profile saved")
-
-        } catch {
-            print("❌ Error saving to Firestore: \(error.localizedDescription)")
+            
+            
+            // MARK: - Save both model in a transaction
+            _ = try await db.runTransaction({ transaction, errorPointer in
+                do {
+                    try transaction.setData(from: dog, forDocument: dogRef)
+                    try transaction.setData(from: user, forDocument: userRef)
+                    print("✅ Transaction: user + dog written")
+                    return nil
+                } catch {
+                    errorPointer?.pointee = error as NSError
+                    return nil
+                }
+            })
         }
     }
-
- 
 }
 
-
+// It prevents from accidentally creating a new dog every time the user updates their profile. That would cause duplicates.
+private func getOrCreateDogId(for uid: String, db: Firestore) async throws -> String {
+    let snapshot = try await db.collection("dogs")
+        .whereField("ownerId", isEqualTo: uid)
+        .getDocuments()
+    
+    if let existing = snapshot.documents.first {
+        print("⚠️ Existing dog found")
+        return existing.documentID
+    } else {
+        print("✅ No existing dog, creating new one")
+        return db.collection("dogs").document().documentID
+    }
+}

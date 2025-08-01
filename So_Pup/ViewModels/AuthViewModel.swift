@@ -22,6 +22,10 @@ class AuthViewModel: ObservableObject {
     init() {
         Task {
             await checkAuthStatus()
+            
+            if isLoggedIn {
+                fetchIDToken()
+            }
         }
     }
     
@@ -34,7 +38,7 @@ class AuthViewModel: ObservableObject {
             _ = try await FirebaseService.shared.signIn(email: email, password: password)
             isLoggedIn = true
             await fetchOnboardingStatus()
-
+            
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -74,7 +78,7 @@ class AuthViewModel: ObservableObject {
             // check the onboarding status
             await fetchOnboardingStatus()
             print("hasCompletedOnboarding inside handleAppleSignIn: \(self.hasCompletedOnboarding)")
-
+            
         } catch {
             
             print("❌ Firebase Apple Sign-In failed: \(error.localizedDescription)")
@@ -123,33 +127,33 @@ class AuthViewModel: ObservableObject {
         }
         
         print("hasCompletedOnboarding after fetch: \(self.hasCompletedOnboarding)")
-
+        
     }
     
     // Checks the current Firebase authentication status and whether the user has completed onboarding.
     func checkAuthStatus() async {
         isCheckingAuthStatus = true
         defer { isCheckingAuthStatus = false } // Ensure loading state is turned off at the end
-
+        
         // Check if a Firebase user session exists
         guard let user = Auth.auth().currentUser else {
-            self.isLoggedIn = false 
+            self.isLoggedIn = false
             return
         }
-
+        
         // Reference the user's Firestore document
         let uid = user.uid
         let docRef = Firestore.firestore().collection("users").document(uid)
-
+        
         do {
             // Try to fetch the user's document from Firestore
             let snapshot = try await docRef.getDocument()
-
+            
             self.isLoggedIn = true // Valid user session confirmed
-
+            
             // Check if the onboarding flag exists and assign it
             self.hasCompletedOnboarding = snapshot.data()?["hasCompletedOnboarding"] as? Bool ?? false
-
+            
         } catch {
             // If Firestore fetch fails, log error and set fallback state
             print("❌ Error fetching onboarding status: \(error)")
@@ -157,5 +161,24 @@ class AuthViewModel: ObservableObject {
             self.hasCompletedOnboarding = false
         }
     }
-
+    
+    func fetchIDToken() {
+        guard let user = Auth.auth().currentUser else {
+            print("❌ No user is currently signed in.")
+            return
+        }
+        
+        user.getIDToken { token, error in
+            if let error = error {
+                print("❌ Failed to fetch ID token: \(error.localizedDescription)")
+                return
+            }
+            
+            if let token = token {
+                print("✅ Firebase ID Token:\n\(token)")
+            }
+        }
+    }
+    
+    
 }
