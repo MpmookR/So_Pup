@@ -13,6 +13,7 @@ protocol DogProfile {
     var status: DogProfileStatus { get }
     var imageURLs: [String] { get }
     var bio: String? { get }
+    var coordinate: Coordinate { get }
     var isMock: Bool? { get }
 }
 

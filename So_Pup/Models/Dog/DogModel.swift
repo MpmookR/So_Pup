@@ -27,7 +27,8 @@ struct DogModel: Identifiable, Codable, DogProfile, PuppyProfile, SocialDogProfi
     
     var bio: String?
     
-//    var isMock: Bool = false // for mock testing
+    var coordinate: Coordinate // Copy coordinate from user
+    
     var isMock: Bool?
 }
 
