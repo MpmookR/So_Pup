@@ -28,7 +28,7 @@ struct ProfileMatchCard: View {
                 
                 VStack (spacing: 4) {
                     Button(action: {
-                        // Match logic
+                        // Match request logic
                     }) {
                         Image(systemName: "plus.message.fill")
                             .font(.title3)

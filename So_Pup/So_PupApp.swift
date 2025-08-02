@@ -5,17 +5,27 @@ import FirebaseAuth
 import FirebaseFirestore
 import FirebaseFunctions
 import SwiftData
+import FirebaseMessaging
 
 @main
 struct SoPupApp: App {
     
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate  // to request the apnToken
+
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var onboardingViewModel = OnboardingViewModel()
     @StateObject private var appOptionsService = AppOptionsService()
+    @StateObject private var matchRequestVM: MatchRequestViewModel
 
     init() {
         FirebaseApp.configure()
-//        configureFirebaseEmulators() // // Comment out for production
+        PushManager.shared.setupPush()
+
+        let authVM = AuthViewModel()
+        _authViewModel = StateObject(wrappedValue: authVM)
+        _matchRequestVM = StateObject(wrappedValue: MatchRequestViewModel(authVM: authVM))
+
+    //    configureFirebaseEmulators()
     }
     
     var body: some Scene {
@@ -24,10 +34,12 @@ struct SoPupApp: App {
                 .environmentObject(authViewModel)
                 .environmentObject(onboardingViewModel)
                 .environmentObject(appOptionsService)
+                .environmentObject(matchRequestVM)
                 .modelContainer(for: DogFilterSettingsModel.self)
                 .task {
                     await authViewModel.checkAuthStatus()
                     await appOptionsService.fetchOptions()
+                    await matchRequestVM.loadCurrentDogId()
                 }
         }
     }

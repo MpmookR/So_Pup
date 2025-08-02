@@ -1,7 +1,10 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @StateObject private var matchRequestVM = MatchRequestViewModel(authVM: AuthViewModel())
+
     var body: some View {
+        
         TabView {
             HomeView()
                 .tabItem {
@@ -27,6 +30,7 @@ struct MainTabView: View {
                     Text("Profile")
                 }
         }
-        .accentColor(.yellow) // Optional: matches your app's theme
+        .accentColor(Color.socialAccent)
+        .environmentObject(matchRequestVM)
     }
 }

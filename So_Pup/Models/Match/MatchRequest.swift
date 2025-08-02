@@ -6,8 +6,9 @@ struct MatchRequest: Identifiable, Codable {
     let fromUserId: String
     let fromDogId: String
     let toDogId: String
-    let status: String // "pending", "accepted", "rejected"
-    let createdAt: TimeInterval
+    let message: String
+    let createdAt: Date
+    let status: MatchRequestStatus
 }
 
 

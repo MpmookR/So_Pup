@@ -10,7 +10,8 @@ struct HomeView: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+    @EnvironmentObject var matchRequestVM: MatchRequestViewModel
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -29,8 +30,7 @@ struct HomeView: View {
                             .ignoresSafeArea(edges: .top)
                         
                         // MARK: - Sticky Filter Bar
-                        Section(header:
-                                    ZStack {
+                        Section(header: ZStack {
                             Color(.systemBackground)
                                 .frame(maxWidth: .infinity)
                             
@@ -39,7 +39,6 @@ struct HomeView: View {
                             }
                             .padding(.horizontal)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            
                         }) {
                             // MARK: - No Matches
                             if matchingVM.matchedProfiles.isEmpty {
@@ -48,7 +47,7 @@ struct HomeView: View {
                                         .fontWeight(.bold)
                                         .foregroundColor(Color.socialText)
                                         .font(.title3)
-                                    Text("try expanding the distance or changing preferences")
+                                    Text("Try expanding the distance or changing preferences")
                                         .fontWeight(.light)
                                         .foregroundColor(Color.socialText)
                                         .font(.body)
@@ -57,9 +56,8 @@ struct HomeView: View {
                                 .padding(.top, 56)
                                 .padding(.horizontal)
                                 
-                            }
-                            // MARK: - Match List
-                            else if let viewerCoordinate = matchingVM.userCoordinate {
+                            } else if let viewerCoordinate = matchingVM.userCoordinate {
+                                // MARK: - Match List
                                 ForEach(matchingVM.matchedProfiles, id: \.dog.id) { profile in
                                     Button(action: {
                                         selectedProfile = profile
@@ -82,7 +80,8 @@ struct HomeView: View {
                         }
                     }
                 }
-                // MARK: - NavigationLink
+                
+                // MARK: - Navigation to FullDogDetailsView
                 .navigationDestination(isPresented: Binding(
                     get: { selectedProfile != nil },
                     set: { if !$0 { selectedProfile = nil } }
@@ -93,10 +92,13 @@ struct HomeView: View {
                             dog: profile.dog,
                             owner: profile.owner,
                             userCoordinate: Coordinate(from: viewerCoordinate),
-                            reviews: [] // Load reviews when Firestore is connected
+                            reviews: [], // TODO: Load actual reviews from Firestore
+                            matchRequestVM: matchRequestVM
                         )
                     }
                 }
+                
+                // MARK: - Filter Sheet
                 .sheet(isPresented: $showFilterSheet) {
                     FilterDetailSheet(
                         filterSettings: $filterSettings,
@@ -109,21 +111,16 @@ struct HomeView: View {
                         },
                         currentDog: matchingVM.currentDog,
                         candidateIds: matchingVM.candidateDogIds,
-                        userCoordinate: matchingVM.userCoordinate.map(Coordinate.init)  //map init to uniformity and Firestore compatibility
+                        userCoordinate: matchingVM.userCoordinate.map(Coordinate.init)
                     )
                 }
                 
+                // MARK: - Load and Initialize Matching Data
                 .task {
-                    // Load from SwiftData
-                    filterSettings = filterService.loadFilterSettings()
-                    
-                    // Load match data from Firestore + apply backend scoring with the loaded filter
-                    await matchingVM.load()
-                    
-                    // Apply filter-based scoring
-                    await matchingVM.applyScoring(using: filterSettings)
+                    let savedFilter = filterService.loadFilterSettings()
+                    filterSettings = savedFilter
+                    await matchingVM.initialize(with: savedFilter)
                 }
-
             }
         }
     }
@@ -131,24 +128,4 @@ struct HomeView: View {
     private var filterService: DogFilterStorageService {
         DogFilterStorageService(context: modelContext)
     }
-
-    private var selectedProfileView: some View {
-        Group {
-            if let profile = selectedProfile,
-               let viewerCoordinate = matchingVM.userCoordinate {
-                FullDogDetailsView(
-                    dog: profile.dog,
-                    owner: profile.owner,
-                    userCoordinate: Coordinate(from: viewerCoordinate),
-                    reviews: [] // Replace with actual reviews when loaded
-                )
-            } else {
-                EmptyView()
-            }
-        }
-    }
-}
-
-#Preview {
-    HomeView()
 }

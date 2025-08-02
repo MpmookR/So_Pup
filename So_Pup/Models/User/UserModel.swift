@@ -20,10 +20,8 @@ struct UserModel: Identifiable, Codable {
     // Dog Link
     var primaryDogId: String
 
-    // Testing
-    // var isMock: Bool = false
     var isMock: Bool?
-
+    var pushToken: String? // FCM token
 }
 
 // MARK: In Firestore, use whereField("isMock", isEqualTo: false) to exclude them in production fetch

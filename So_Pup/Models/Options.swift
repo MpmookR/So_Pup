@@ -126,6 +126,14 @@ enum PreferredAgeOption: String, CaseIterable, Identifiable {
     }
 }
 
+enum MatchRequestStatus: String, CaseIterable, Identifiable, Codable {
+    var id: String { rawValue }
+    
+    case pending = "Pending"
+    case accepted = "Accepted"
+    case rejected = "Rejected"
+}
+
 
 
 

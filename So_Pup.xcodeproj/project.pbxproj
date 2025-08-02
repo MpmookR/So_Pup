@@ -17,6 +17,7 @@
 		405443182E0C87E000E4BAB7 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 405443172E0C87E000E4BAB7 /* FirebaseStorage */; };
 		40C30A622E379FE7001B25E4 /* GeoFire in Frameworks */ = {isa = PBXBuildFile; productRef = 40C30A612E379FE7001B25E4 /* GeoFire */; };
 		40C30A642E379FE7001B25E4 /* GeoFireUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 40C30A632E379FE7001B25E4 /* GeoFireUtils */; };
+		40C30A7B2E3D25E2001B25E4 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 40C30A7A2E3D25E2001B25E4 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,7 @@
 				405443162E0C87E000E4BAB7 /* FirebaseFirestore in Frameworks */,
 				405442C72E0982BA00E4BAB7 /* GoogleSignInSwift in Frameworks */,
 				405443182E0C87E000E4BAB7 /* FirebaseStorage in Frameworks */,
+				40C30A7B2E3D25E2001B25E4 /* FirebaseMessaging in Frameworks */,
 				4042761E2E2A78C100F525A5 /* FirebaseFunctionsCombine-Community in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,6 +100,7 @@
 				4042761D2E2A78C100F525A5 /* FirebaseFunctionsCombine-Community */,
 				40C30A612E379FE7001B25E4 /* GeoFire */,
 				40C30A632E379FE7001B25E4 /* GeoFireUtils */,
+				40C30A7A2E3D25E2001B25E4 /* FirebaseMessaging */,
 			);
 			productName = So_Pup;
 			productReference = 405442962E08186200E4BAB7 /* So_Pup.app */;
@@ -294,6 +297,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "So-Pup-Info.plist";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location helps enable social features in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to help you find nearby dogs for playdates.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -324,6 +329,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "So-Pup-Info.plist";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location helps enable social features in your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to help you find nearby dogs for playdates.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -442,6 +449,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 40C30A602E379FE7001B25E4 /* XCRemoteSwiftPackageReference "geofire-objc" */;
 			productName = GeoFireUtils;
+		};
+		40C30A7A2E3D25E2001B25E4 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 405442B82E095A2B00E4BAB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
