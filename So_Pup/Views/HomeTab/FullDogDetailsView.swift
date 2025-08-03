@@ -61,10 +61,16 @@ struct FullDogDetailsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .navigationBarBackButtonHidden(true)
                 
-                // match button
-                ConnectButton(alreadyConnected: false) {
-                    showRequestView = true
+                // MARK: - match button
+                ConnectButton(
+                    label: matchRequestVM.isRequestPending ? "Request Sent" : "Let's Connect",
+                    alreadyConnected: matchRequestVM.isRequestPending
+                ) {
+                    if !matchRequestVM.isRequestPending {
+                        showRequestView = true
+                    }
                 }
+                .disabled(matchRequestVM.isRequestPending)
                 .padding(.horizontal)
                 .navigationDestination(isPresented: $showRequestView) {
                     SendConnectRequestView(
@@ -83,42 +89,32 @@ struct FullDogDetailsView: View {
                                     matchRequestVM.alertMessage = "❌ Your dog profile could not be loaded."
                                     matchRequestVM.showAlert = true
                                 }
-                                showRequestView = false
                             }
                         }
                     )
-                    .task {
-                        if matchRequestVM.currentDogId == nil {
-                            await matchRequestVM.loadCurrentDogId()
-                        }
-                    }
                     .alert(isPresented: $matchRequestVM.showAlert) {
                         Alert(
                             title: Text("Match Request"),
                             message: Text(matchRequestVM.alertMessage),
-                            dismissButton: .default(Text("OK"))
+                            dismissButton: .default(Text("OK"), action:{
+                                showRequestView = false
+                            })
                         )
                     }
+                }
+            }
+            .task {
+                if matchRequestVM.currentDogId == nil {
+                    await matchRequestVM.loadCurrentDogId()
+                }
+                if let fromId = matchRequestVM.currentDogId {
+                    await matchRequestVM.checkIfRequestExists(fromDogId: fromId, toDogId: dog.id)
                 }
             }
         }
     }
 }
-    //#Preview {
-    //    let mockDog = MockDogData.dog1
-    //    let mockOwner = MockUserData.user1
-    //    let mockCoordinate = Coordinate(latitude: 51.5074, longitude: -0.1278)
-    //    let mockReviews = MockDogReviewData.all
-    //
-    //    return NavigationStack {
-    //        FullDogDetailsView(
-    //            dog: mockDog,
-    //            owner: mockOwner,
-    //            userCoordinate: mockCoordinate,
-    //            reviews: mockReviews
-    //        )
-    //    }
-    //}
+
     
     
     

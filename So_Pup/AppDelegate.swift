@@ -10,6 +10,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
+        // to receive and set the APNs device token
         Messaging.messaging().apnsToken = deviceToken
         print("✅ [AppDelegate] APNs token registered")
         print("📲 Received APNs token: \(deviceToken.map { String(format: "%02x", $0) }.joined())")
