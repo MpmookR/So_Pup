@@ -1,6 +1,6 @@
 import Foundation
 
-struct UserModel: Identifiable, Codable {
+struct UserModel: Identifiable, Codable, Hashable {
     // Identity
     var id: String
     var name: String

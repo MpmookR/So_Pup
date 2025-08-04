@@ -110,6 +110,32 @@ final class MatchRequestService {
         let result = try JSONDecoder().decode([String: Bool].self, from: data)
         return result["exists"] ?? false
     }
+    
+    func fetchMatchRequests(
+        dogId: String,
+        type: String, // should be "incoming" or "outgoing"
+        authToken: String
+    ) async throws -> [MatchRequest] {
+        guard let url = URL(string: "\(baseURL)/\(dogId)?type=\(type)") else {
+            throw URLError(.badURL)
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode([MatchRequest].self, from: data)
+    }
+
 
 }
 

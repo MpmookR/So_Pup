@@ -1,7 +1,7 @@
 import Foundation
 import CoreLocation
 
-struct Coordinate: Codable {
+struct Coordinate: Codable,Equatable, Hashable {
     var latitude: Double
     var longitude: Double
     var geohash: String?

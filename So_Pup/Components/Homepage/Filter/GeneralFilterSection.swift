@@ -144,18 +144,18 @@ struct GeneralFilterSection: View {
     }
 }
 
-#Preview {
-    @State var tempSettings = DogFilterSettings(
-        maxDistanceInKm: 10,
-        selectedGender: .female,
-        selectedSizes: [.small, .medium],
-        selectedHealthStatus: .verified,
-        neuteredOnly: true
-    )
-    
-    GeneralFilterSection(filterSettings: $tempSettings)
-        .padding()
-}
+//#Preview {
+//    @State var tempSettings = DogFilterSettings(
+//        maxDistanceInKm: 10,
+//        selectedGender: .female,
+//        selectedSizes: [.small, .medium],
+//        selectedHealthStatus: .verified,
+//        neuteredOnly: true
+//    )
+//    
+//    GeneralFilterSection(filterSettings: $tempSettings)
+//        .padding()
+//}
 
 
 

@@ -4,6 +4,7 @@ import FirebaseAuth
 @MainActor
 final class MatchRequestViewModel: ObservableObject {
     private let authVM: AuthViewModel
+    
     private let profileService = ProfileDataService()
     
     @Published var currentDogId: String? = nil
@@ -11,6 +12,9 @@ final class MatchRequestViewModel: ObservableObject {
     @Published var alertMessage: String = ""
     @Published var showAlert: Bool = false
     @Published var isRequestPending: Bool = false
+    
+    @Published var pendingCards: [MatchRequestCardData] = []
+    @Published var requestedCards: [MatchRequestCardData] = []
     
     init(authVM: AuthViewModel) {
         self.authVM = authVM
@@ -63,8 +67,94 @@ final class MatchRequestViewModel: ObservableObject {
             print("❌ Error checking match request status:", error.localizedDescription)
         }
     }
+    
+    func fetchMatchRequests() async {
+        guard let dogId = currentDogId else {
+            print("❌ No dogId found. Cannot fetch match requests.")
+            return
+        }
+        do {
+            let token = try await authVM.fetchIDToken()
+            
+            // Fire both API requests in parallel
+            async let incomingRaw = MatchRequestService.shared.fetchMatchRequests(dogId: dogId, type: "incoming", authToken: token)
+            async let outgoingRaw = MatchRequestService.shared.fetchMatchRequests(dogId: dogId, type: "outgoing", authToken: token)
+            
+            let (incoming, outgoing) = try await (incomingRaw, outgoingRaw)
+            
+            print("📥 Incoming: \(incoming.count), 📤 Outgoing: \(outgoing.count)")
+
+            self.pendingCards = await convertToCardData(from: incoming, direction: .incoming)
+            self.requestedCards = await convertToCardData(from: outgoing, direction: .outgoing)
+            
+        } catch {
+            print("❌ Failed to load match requests:", error)
+        }
+    }
 
     
+    func updateMatchStatus(requestId: String, status: MatchRequestStatus) async {
+        do {
+            let token = try await authVM.fetchIDToken()
+            try await MatchRequestService.shared.updateMatchStatus(
+                requestId: requestId,
+                status: status,
+                authToken: token
+            )
+            print("✅ ViewModel updated status for request \(requestId) to \(status.rawValue)")
+        } catch {
+            print("❌ Failed to update match status for \(requestId):", error)
+            alertMessage = "Error updating match request: \(error.localizedDescription)"
+            showAlert = true
+        }
+    }
+    
+    // helper
+    private func convertToCardData(
+        from requests: [MatchRequest],
+        direction: MatchRequestCardData.MatchDirection
+    ) async -> [MatchRequestCardData] {
+        await withTaskGroup(of: MatchRequestCardData?.self) { group in
+            for request in requests {
+                group.addTask {
+                    let dogId = (direction == .incoming) ? request.fromDogId : request.toDogId
+                    print("🐶 Fetching dog [\(dogId)] for request \(request.id)")
+                    
+                    do {
+                        guard let dog = try await self.profileService.fetchDog(by: dogId),
+                              let owner = try await self.profileService.fetchUser(by: dog.ownerId)
+                        else {
+                            print("⚠️ Could not resolve dog or owner for request \(request.id)")
+                            return nil }
+                        
+                        print("✅ Loaded dog '\(dog.displayName)' and owner '\(owner.name)' for request \(request.id)")
+                        
+                        return MatchRequestCardData(
+                            id: request.id,
+                            dog: dog,
+                            owner: owner,
+                            message: request.message,
+                            requestId: request.id,
+                            direction: direction
+                        )
+                    } catch {
+                        print("❌ Error loading card data:", error)
+                        return nil
+                    }
+                }
+            }
+            
+            //  Wait for all tasks and collect successful ones
+            var result: [MatchRequestCardData] = []
+            for await value in group {
+                if let value = value {
+                    result.append(value)
+                }
+            }
+            print("📦 Built \(result.count) card(s) for direction: \(direction)")
+            return result
+        }
+    }
+    
 }
-
 
