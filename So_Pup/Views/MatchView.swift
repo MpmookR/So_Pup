@@ -12,7 +12,7 @@ struct MatchView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            VStack {
                 CustomNavBar(title: "Match")
                 TopTabSwitcher(tabs: tabOptions, selectedTab: $selectedTab)
 
