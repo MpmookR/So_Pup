@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct ChatBubble: View {
-    let text: String
-    let isCurrentUser: Bool
+    var id: String // messageID
+    var text: String
+    var isCurrentUser: Bool
     
     var body: some View {
         HStack {
@@ -23,15 +24,17 @@ struct ChatBubble: View {
             
             if !isCurrentUser { Spacer() }
         }
+        .padding(.horizontal)
+        .id(id) // use for .scrollTo(id) to auto scroll to a particular message
     }
 }
 
-#Preview {
-    VStack {
-        ChatBubble(text: "Hello, I am the first time dog owner", isCurrentUser: true)
-        ChatBubble(text: "Hello", isCurrentUser: false)
-    }
-    .padding(.all)
-}
+//#Preview {
+//    VStack {
+//        ChatBubble(text: "Hello, I am the first time dog owner", isCurrentUser: true)
+//        ChatBubble(text: "Hello", isCurrentUser: false)
+//    }
+//    .padding(.all)
+//}
 
 

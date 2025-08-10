@@ -11,7 +11,7 @@ struct HomeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var matchRequestVM: MatchRequestViewModel
-
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -30,16 +30,22 @@ struct HomeView: View {
                             .ignoresSafeArea(edges: .top)
                         
                         // MARK: - Sticky Filter Bar
-                        Section(header: ZStack {
-                            Color(.systemBackground)
+                        Section(
+                            header:
+                                ZStack {
+                                    Color.white
+                                    //                                        .frame(maxWidth: .infinity)
+                                    
+                                    FilterBarView(filterSettings: filterSettings) {
+                                        showFilterSheet = true
+                                    }
+                                    .padding(.horizontal)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                                 .frame(maxWidth: .infinity)
-                            
-                            FilterBarView(filterSettings: filterSettings) {
-                                showFilterSheet = true
-                            }
-                            .padding(.horizontal)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }) {
+                                .background(Color.white) // ensure no gaps
+                                .zIndex(1)               // keep header above content
+                        ){
                             // MARK: - No Matches
                             if matchingVM.matchedProfiles.isEmpty {
                                 VStack(alignment: .center) {
@@ -113,6 +119,7 @@ struct HomeView: View {
                         candidateIds: matchingVM.candidateDogIds,
                         userCoordinate: matchingVM.userCoordinate.map(Coordinate.init)
                     )
+                    .background(Color.white)
                 }
                 
                 // MARK: - Load and Initialize Matching Data

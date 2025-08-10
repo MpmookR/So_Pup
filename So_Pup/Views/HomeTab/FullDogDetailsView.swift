@@ -7,7 +7,7 @@ struct FullDogDetailsView: View {
     let userCoordinate: Coordinate
     let reviews: [DogReview]
     
-    @ObservedObject var matchRequestVM: MatchRequestViewModel
+    @ObservedObject var matchRequestVM: MatchRequestViewModel // share ref
     var onBack: (() -> Void)? = nil
     
     @State private var showRequestView = false
@@ -85,6 +85,9 @@ struct FullDogDetailsView: View {
                                         toDogId: dog.id,
                                         message: message
                                     )
+                                    // ✅ Refresh match requests after sending
+                                    await matchRequestVM.fetchMatchRequests()
+
                                 } else {
                                     matchRequestVM.alertMessage = "❌ Your dog profile could not be loaded."
                                     matchRequestVM.showAlert = true

@@ -134,6 +134,11 @@ enum MatchRequestStatus: String, CaseIterable, Identifiable, Codable, Equatable,
     case rejected
 }
 
+enum MessageType: String, Codable {
+    case text
+    case meetupRequest
+    case system // eg; Meetups are disabled in Puppy Mode
+}
 
 
 

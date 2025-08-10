@@ -16,6 +16,8 @@ final class MatchRequestViewModel: ObservableObject {
     @Published var pendingCards: [MatchRequestCardData] = []
     @Published var requestedCards: [MatchRequestCardData] = []
     
+    @Published var pendingChatRoomId: String? = nil
+    
     init(authVM: AuthViewModel) {
         self.authVM = authVM
     }
@@ -76,7 +78,7 @@ final class MatchRequestViewModel: ObservableObject {
         do {
             let token = try await authVM.fetchIDToken()
             
-            // Fire both API requests in parallel
+            // fetch both API requests in parallel
             async let incomingRaw = MatchRequestService.shared.fetchMatchRequests(dogId: dogId, type: "incoming", authToken: token)
             async let outgoingRaw = MatchRequestService.shared.fetchMatchRequests(dogId: dogId, type: "outgoing", authToken: token)
             
@@ -96,12 +98,20 @@ final class MatchRequestViewModel: ObservableObject {
     func updateMatchStatus(requestId: String, status: MatchRequestStatus) async {
         do {
             let token = try await authVM.fetchIDToken()
-            try await MatchRequestService.shared.updateMatchStatus(
+            let response = try await MatchRequestService.shared.updateMatchStatus(
                 requestId: requestId,
                 status: status,
                 authToken: token
             )
-            print("✅ ViewModel updated status for request \(requestId) to \(status.rawValue)")
+            
+            print("✅ Updated status for request \(requestId) to \(status.rawValue)")
+            
+            if status == .accepted, let chatRoomId = response.chatRoomId {
+                // Store for MainTabView -> ChatView navigation
+                pendingChatRoomId = chatRoomId
+                print("✅ Match staus is \(status.rawValue), navigate to chatRoomId: \(chatRoomId)")
+            }
+            
         } catch {
             print("❌ Failed to update match status for \(requestId):", error)
             alertMessage = "Error updating match request: \(error.localizedDescription)"

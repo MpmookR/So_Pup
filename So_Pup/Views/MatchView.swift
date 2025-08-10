@@ -90,6 +90,8 @@ struct MatchView: View {
                     Text("Loading...")
                 }
             }
+            .background(Color.white)
+            .ignoresSafeArea()
         }
     }
 }

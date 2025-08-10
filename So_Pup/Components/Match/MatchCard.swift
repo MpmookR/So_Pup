@@ -85,6 +85,7 @@ struct MatchCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(message)
                     .font(.subheadline)
+                    .foregroundColor(Color.socialText)
                     .padding(.all)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

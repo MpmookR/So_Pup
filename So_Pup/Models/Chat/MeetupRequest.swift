@@ -1,11 +1,18 @@
 import Foundation
 
 struct MeetupRequest: Hashable, Codable {
+    let id: String
+    let chatRoomId: String
+    let senderId: String
+    let receiverId: String
+    let receiverDogId: String
     let proposedTime: Date
     let locationName: String // it should use the CoreLocation/map kit to pin the location
     let locationCoordinate: Coordinate
     let meetUpMessage: String
     let status: MeetupStatus // pending, accepted, declined
+    let createdAt: Date
+    let updatedAt: Date
 }
 
 enum MeetupStatus: String, Codable {

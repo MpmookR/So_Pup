@@ -65,24 +65,24 @@ struct MeetupCard: View {
     }
 }
     
-#Preview {
-    Group {
-        MeetupCard(meetup: .mock(status: .pending))
-        MeetupCard(meetup: .mock(status: .upcoming))
-        MeetupCard(meetup: .mock(status: .declined))
-    }
-    .padding()
-}
-
-extension MeetupRequest {
-    static func mock(status: MeetupStatus) -> MeetupRequest {
-        .init(
-            proposedTime: Date(),
-            locationName: "Queen Elizabeth I Oak",
-            locationCoordinate: Coordinate(latitude: 0, longitude: 0, geohash: nil),
-            meetUpMessage: "Hello",
-            status: status
-        )
-    }
-}
+//#Preview {
+//    Group {
+//        MeetupCard(meetup: .mock(status: .pending))
+//        MeetupCard(meetup: .mock(status: .upcoming))
+//        MeetupCard(meetup: .mock(status: .declined))
+//    }
+//    .padding()
+//}
+//
+//extension MeetupRequest {
+//    static func mock(status: MeetupStatus) -> MeetupRequest {
+//        .init(
+//            proposedTime: Date(),
+//            locationName: "Queen Elizabeth I Oak",
+//            locationCoordinate: Coordinate(latitude: 0, longitude: 0, geohash: nil),
+//            meetUpMessage: "Hello",
+//            status: status
+//        )
+//    }
+//}
 

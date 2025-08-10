@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct ChatListCard: View {
+    let chatroom: ChatRoom
     let dog: DogModel
     let owner: UserModel
     let userCoordinate: Coordinate
+    let isNew: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(spacing: 12) {
             // Profile image
             if let url = dog.imageURLs.first, let imageURL = URL(string: url) {
                 AsyncImage(url: imageURL) { image in
@@ -35,8 +37,13 @@ struct ChatListCard: View {
                 .font(.caption)
                 .foregroundColor(Color.socialText)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer()
+            // New message icon on the right middle
+            Image(systemName: isNew ? "message.badge.filled.fill.rtl" : "message")
+                .foregroundColor(isNew ? .red : .gray)
+                .imageScale(.large)
+                .frame(width: 30, height: 30)
         }
         .padding()
         .frame(maxWidth: .infinity)
@@ -45,17 +52,3 @@ struct ChatListCard: View {
         .shadow(radius: 2)
     }
 }
-
-
-#Preview {
-    VStack {
-        ChatListCard(
-            dog: MockDogData.dog1,
-            owner: MockUserData.user1,
-            userCoordinate: MockUserData.user1.coordinate)
-    }
-    .padding(.all)
-
-}
-
-

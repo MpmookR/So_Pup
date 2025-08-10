@@ -1,21 +1,20 @@
 import Foundation
 
-// A singleton service to handle match request-related API calls.
-final class MatchRequestService {
-    static let shared = MatchRequestService()
+final class ChatService {
+    static let shared = ChatService()
     private init() {}
-    
-    private let baseURL = "https://api-2z4snw37ba-uc.a.run.app/matchRequest"
 
-    func sendMatchRequest(
+    private let baseURL = "https://api-2z4snw37ba-uc.a.run.app/chat"
+    
+    // create chatroom
+    func createChatroom(
         fromDogId: String,
         toUserId: String,
         toDogId: String,
-        message: String,
         authToken: String
-    ) async throws {
+    )async throws -> String {
         // Build the target URL for the match request endpoint
-        guard let url = URL(string: "\(baseURL)/send") else {
+        guard let url = URL(string: "\(baseURL)/createRoom") else {
             throw URLError(.badURL)
         }
         // Prepare the URLRequest
@@ -28,7 +27,6 @@ final class MatchRequestService {
             "fromDogId": fromDogId,
             "toUserId": toUserId,
             "toDogId": toDogId,
-            "message": message
         ]
         
         // Encode the body as JSON
@@ -36,95 +34,69 @@ final class MatchRequestService {
         print("📦 Request:", body)
         
         // Send the HTTP request and wait for the response
-        let (_, response) = try await URLSession.shared.data(for: request)
-
-        // Validate the HTTP response
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-
-        print("✅ Match request sent successfully")
-    }
-
-    
-    /// Updates the status of an existing match request and build the chatroom
-    struct UpdateMatchStatusResponse: Codable {
-        let message: String
-        let chatRoomId: String?
-    }
-
-    func updateMatchStatus(
-        requestId: String,
-        status: MatchRequestStatus,
-        authToken: String
-    ) async throws -> UpdateMatchStatusResponse {
-        guard let url = URL(string: "\(baseURL)/\(requestId)/status") else {
-            throw URLError(.badURL)
-        }
-        print("📝 Updating status of matchRequest \(requestId) to \(status.rawValue)")
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-        
-        let body: [String: Any] = ["status": status.rawValue]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        
-        print("📦 Request:", body)
-
-        // Send the request and validate the response
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
             throw URLError(.badServerResponse)
         }
+        let decoded = try JSONDecoder().decode(ChatRoomCreation.self, from: data)
+            print("✅ Chatroom created with ID:", decoded.chatroomId)
+            return decoded.chatroomId
+        }
+    
+    // send message in the chatroom
+    func sendMessage(
+        chatRoomId: String,
+        text: String,
+        receiverId: String,
+        senderDogId: String,
+        receiverDogId: String,
+        authToken: String
+    ) async throws -> Message {
+        guard let url = URL(string: "\(baseURL)/sendMessage") else {
+            throw URLError(.badURL)
+        }
 
-        let decoded = try JSONDecoder().decode(UpdateMatchStatusResponse.self, from: data)
-        print("✅ Status updated: \(decoded.message), chatRoomId: \(decoded.chatRoomId ?? "nil")")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+
+        let body: [String: Any] = [
+            "chatRoomId": chatRoomId,
+            "text": text,
+            "receiverId": receiverId,
+            "senderDogId": senderDogId,
+            "receiverDogId": receiverDogId
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        let decoded = try JSONDecoder().decode(Message.self, from: data)
+        print("📨 Sent message:", decoded.text)
         return decoded
     }
     
-    // Checks if a pending match request exists between two dogs
-    func checkIfRequestExists(
-        fromDogId: String,
-        toDogId: String,
+    // fetch all messages belongs to the chatroom
+    func fetchMessages(
+        for chatRoomId: String,
         authToken: String
-    ) async throws -> Bool {
-        guard let url = URL(string: "\(baseURL)/status?fromDogId=\(fromDogId)&toDogId=\(toDogId)") else {
+    ) async throws -> [Message] {
+        guard let url = URL(string: "\(baseURL)/\(chatRoomId)/messages") else {
             throw URLError(.badURL)
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-
-        // Execute request
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-        
-        // Decode response JSON format >> exists: true/false
-        let result = try JSONDecoder().decode([String: Bool].self, from: data)
-        return result["exists"] ?? false
-    }
-    
-    func fetchMatchRequests(
-        dogId: String,
-        type: String, // should be "incoming" or "outgoing"
-        authToken: String
-    ) async throws -> [MatchRequest] {
-        guard let url = URL(string: "\(baseURL)/\(dogId)?type=\(type)") else {
-            throw URLError(.badURL)
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -134,10 +106,35 @@ final class MatchRequestService {
             throw URLError(.badServerResponse)
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([MatchRequest].self, from: data)
+        let messages = try JSONDecoder().decode([Message].self, from: data)
+        print("📥 \(messages.count) messages fetched for chatRoom \(chatRoomId)")
+        return messages
     }
+
+    // fectch all chatroom for the user
+    func fetchChatRooms(authToken: String) async throws -> [ChatRoom] {
+        guard let url = URL(string: "\(baseURL)/rooms") else {
+            throw URLError(.badURL)
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        let chatRooms = try JSONDecoder().decode([ChatRoom].self, from: data)
+        print("📥 \(chatRooms.count) chat rooms fetched")
+        print("Raw chat room JSON:", String(data: data, encoding: .utf8) ?? "nil")
+        return chatRooms
+    }
+
 
 
 }

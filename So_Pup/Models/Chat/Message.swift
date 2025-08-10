@@ -9,11 +9,6 @@ struct Message: Identifiable, Hashable, Codable {
     let receiverDogId: String
     let timestamp: Date
     let messageType: MessageType
-    let meetupRequest: MeetupRequest? // Only for .meetupRequest messages
+    let meetupId: String? // Optional for non-meetup messages
 }
 
-enum MessageType: String, Codable {
-    case text
-    case meetupRequest
-    case system // eg; Meetups are disabled in Puppy Mode
-}
