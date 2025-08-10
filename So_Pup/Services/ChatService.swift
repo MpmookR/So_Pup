@@ -3,7 +3,7 @@ import Foundation
 final class ChatService {
     static let shared = ChatService()
     private init() {}
-
+    
     private let baseURL = "https://api-2z4snw37ba-uc.a.run.app/chat"
     
     // create chatroom
@@ -41,9 +41,9 @@ final class ChatService {
             throw URLError(.badServerResponse)
         }
         let decoded = try JSONDecoder().decode(ChatRoomCreation.self, from: data)
-            print("✅ Chatroom created with ID:", decoded.chatroomId)
-            return decoded.chatroomId
-        }
+        print("✅ Chatroom created with ID:", decoded.chatroomId)
+        return decoded.chatroomId
+    }
     
     // send message in the chatroom
     func sendMessage(
@@ -53,16 +53,16 @@ final class ChatService {
         senderDogId: String,
         receiverDogId: String,
         authToken: String
-    ) async throws -> Message {
+    ) async throws {
         guard let url = URL(string: "\(baseURL)/sendMessage") else {
             throw URLError(.badURL)
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-
+        
         let body: [String: Any] = [
             "chatRoomId": chatRoomId,
             "text": text,
@@ -70,20 +70,29 @@ final class ChatService {
             "senderDogId": senderDogId,
             "receiverDogId": receiverDogId
         ]
-
+        
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        print("📦 message to send:", body)
 
         let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
+        guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
 
-        let decoded = try JSONDecoder().decode(Message.self, from: data)
-        print("📨 Sent message:", decoded.text)
-        return decoded
+        if !(200..<300).contains(http.statusCode) {
+            let raw = String(data: data, encoding: .utf8) ?? "<non-utf8>"
+            print("❌ sendMessage HTTP \(http.statusCode). Body:\n\(raw)")
+            throw URLError(.badServerResponse)
+        }
+
+        // No decode needed — Firestore listener will bring the new message in.
+        if let raw = String(data: data, encoding: .utf8) {
+            print("✅ sendMessage accepted. Raw response:\n\(raw)")
+        } else {
+            print("✅ sendMessage accepted (non-UTF8 body).")
+        }
     }
+
     
     // fetch all messages belongs to the chatroom
     func fetchMessages(
@@ -134,8 +143,19 @@ final class ChatService {
         print("Raw chat room JSON:", String(data: data, encoding: .utf8) ?? "nil")
         return chatRooms
     }
-
-
+    
+    private func makeISODecoder() -> JSONDecoder {
+        let dec = JSONDecoder()
+        dec.dateDecodingStrategy = .custom { decoder in
+            let s = try decoder.singleValueContainer().decode(String.self)
+            if let d = ISO.parse(s) { return d }  // uses your ISO helper (withFractionalSeconds)
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: decoder.codingPath,
+                      debugDescription: "Invalid ISO-8601 date: \(s)")
+            )
+        }
+        return dec
+    }
 
 }
 

@@ -21,11 +21,22 @@ struct ChatRoomCreation: Codable {
     var chatroomId: String
 }
 
+import Foundation
+
 extension ChatRoom {
+    func otherUserId(currentUserId: String) -> String? {
+        userIds.first { $0 != currentUserId }
+    }
+
+    func otherDogId(myDogId: String) -> String? {
+        dogIds.first { $0 != myDogId }
+    }
+
     /// Freshest ISO8601 string for this room (last message if present, else createdAt)
     var newestISOTimeString: String {
         lastMessage?.timestamp ?? createdAt
     }
 }
+
 
 

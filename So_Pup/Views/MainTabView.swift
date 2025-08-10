@@ -3,49 +3,37 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTabIndex = 0
 
-    @StateObject private var matchRequestVM = MatchRequestViewModel(authVM: AuthViewModel())
-    @StateObject private var chatVM = ChatViewModel(authVM: AuthViewModel())
-    
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var chatVM: ChatViewModel
+    @EnvironmentObject var matchRequestVM: MatchRequestViewModel
+
     @StateObject private var router = GlobalRouter()
 
     var body: some View {
         TabView(selection: $selectedTabIndex) {
             HomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
+                .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(0)
 
-            // If you need the binding in MatchView, add an initializer that accepts it.
             MatchView()
-                .tabItem {
-                    Image(systemName: "heart.circle.fill")
-                    Text("Match")
-                }
+                .tabItem { Label("Match", systemImage: "heart.circle.fill") }
                 .tag(1)
 
             ChatView()
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                    Text("Chat")
-                }
+                .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right.fill") }
                 .tag(2)
 
             ProfileView()
-                .tabItem {
-                    Image(systemName: "person.crop.circle.fill")
-                    Text("Profile")
-                }
+                .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
                 .tag(3)
         }
-        .accentColor(Color.socialAccent)
-        .environmentObject(matchRequestVM)
-        .environmentObject(chatVM)
-        .environmentObject(router)
-        // When backend returns chatRoomId, flip to Chat tab and hand it to router
-        .onReceive(matchRequestVM.$pendingChatRoomId.compactMap { $0 }) { newChatId in
-            router.pendingChatRoomId = newChatId
+        .tint(Color.socialAccent)
+        .environmentObject(router) // only router is created here
+
+        // Flip to Chat tab when a room is created
+        .onChange(of: matchRequestVM.pendingChatRoomId, initial: false) { _, newChatId in
+            guard let id = newChatId else { return }
+            router.pendingChatRoomId = id
             selectedTabIndex = 2
         }
     }

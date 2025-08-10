@@ -2,23 +2,24 @@ import SwiftUI
 import FirebaseAuth
 
 struct ChatView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var chatVM: ChatViewModel
-    @EnvironmentObject var router: GlobalRouter   // read pendingChatRoomId
-
+    @EnvironmentObject var router: GlobalRouter
+    
     @State private var selectedTab = "Chat"
     @State private var hasLoaded = false
     @State private var selectedCard: ChatRoomCardData?
-
+    
     private let tabOptions = ["Chat", "Meet-Up"]
-
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 CustomNavBar(title: "Chat")
                 TopTabSwitcher(tabs: tabOptions, selectedTab: $selectedTab)
-
+                
                 ScrollView {
-                    LazyVStack(spacing: 16) {  // Lazy for better performance
+                    LazyVStack(spacing: 16) {
                         if selectedTab == "Chat" {
                             if chatVM.isLoading {
                                 ProgressView("Loading chats...")
@@ -27,7 +28,7 @@ struct ChatView: View {
                                     .foregroundColor(.gray)
                                     .padding()
                             } else {
-                                ForEach(chatVM.chatRoomProfiles, id: \.room.id) { card in
+                                ForEach(chatVM.chatRoomProfiles) { card in
                                     ChatListCard(
                                         chatroom: card.room,
                                         dog: card.dog,
@@ -39,8 +40,7 @@ struct ChatView: View {
                                 }
                             }
                         } else {
-                            Text("Meet-Up")
-                            // TODO: your meetup list
+                            MeetupListSection() // To do
                         }
                     }
                     .padding(.top)
@@ -48,19 +48,14 @@ struct ChatView: View {
                 }
             }
             // Navigation destination when a card is selected
-            .navigationDestination(item: $selectedCard) { card in
-                ChatScreen(
-                    dog: card.dog,
-                    chatRoomId: card.room.id,
-                    currentUserId: Auth.auth().currentUser?.uid ?? "",
-                    onBack: { selectedCard = nil }
+            .navigationDestination(item: $selectedCard) { (card: ChatRoomCardData) in
+                ChatDestination(
+                    card: card,
+                    onBack: { selectedCard = nil },
+                    authVM: authViewModel
                 )
-                .onAppear {
-                    chatVM.markChatRoomAsRead(card.room)
-                }
-                .onDisappear {
-                    chatVM.markChatRoomAsRead(card.room)
-                }
+                .onAppear { chatVM.markChatRoomAsRead(card.room) }
+                .onDisappear { chatVM.markChatRoomAsRead(card.room) }
             }
             // Initial load
             .task {
@@ -73,20 +68,20 @@ struct ChatView: View {
             .onChange(of: router.pendingChatRoomId, initial: false) { _, newValue in
                 if let id = newValue { tryNavigate(to: id) }
             }
-            // Respond to VM profile updates
-            .onChange(of: chatVM.chatRoomProfiles, initial: false) { _, _ in
+            // Respond to VM profile updates (compare IDs only to reduce work)
+            .onChange(of: chatVM.chatRoomProfiles.map(\.id), initial: false) { _, _ in
                 if let id = router.pendingChatRoomId { tryNavigate(to: id) }
             }
+            .background(.white)
+            .ignoresSafeArea()
         }
-        .background(Color.white)
-        .ignoresSafeArea()
     }
-
+    
     // MARK: - Navigation helper
     private func tryNavigate(to chatRoomId: String) {
         if let card = chatVM.chatRoomProfiles.first(where: { $0.room.id == chatRoomId }) {
             selectedCard = card
-            router.pendingChatRoomId = nil // clear so it won’t retrigger
+            router.pendingChatRoomId = nil
         }
     }
 }

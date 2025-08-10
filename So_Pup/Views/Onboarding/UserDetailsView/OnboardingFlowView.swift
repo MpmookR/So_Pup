@@ -63,9 +63,9 @@ struct OnboardingFlowView: View {
                         }
                     }
                 },
-                mode: DogMode(rawValue: onboardingVM.mode) ?? .puppy,
-                matchRequestVM: MatchRequestViewModel(authVM: authViewModel),
+                mode: DogMode(rawValue: onboardingVM.mode) ?? .puppy
             )
+
 
         default:
             EmptyView()

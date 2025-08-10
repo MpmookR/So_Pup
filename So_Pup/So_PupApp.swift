@@ -16,6 +16,7 @@ struct SoPupApp: App {
     @StateObject private var onboardingViewModel = OnboardingViewModel()
     @StateObject private var appOptionsService = AppOptionsService()
     @StateObject private var matchRequestVM: MatchRequestViewModel
+    @StateObject private var chatVM: ChatViewModel
 
     init() {
         FirebaseApp.configure()
@@ -24,7 +25,8 @@ struct SoPupApp: App {
         let authVM = AuthViewModel()
         _authViewModel = StateObject(wrappedValue: authVM)
         _matchRequestVM = StateObject(wrappedValue: MatchRequestViewModel(authVM: authVM))
-
+        _chatVM         = StateObject(wrappedValue: ChatViewModel(authVM: authVM))
+        
     //    configureFirebaseEmulators()
     }
     
@@ -35,6 +37,7 @@ struct SoPupApp: App {
                 .environmentObject(onboardingViewModel)
                 .environmentObject(appOptionsService)
                 .environmentObject(matchRequestVM)
+                .environmentObject(chatVM) 
                 .modelContainer(for: DogFilterSettingsModel.self)
                 .task {
                     await authViewModel.checkAuthStatus()

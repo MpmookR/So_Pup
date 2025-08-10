@@ -1,12 +1,15 @@
 import SwiftUI
 
+// the view uses for prep .loadCurrentDogId data, then switch to MainTabView via RootView
 struct LoadingToHomeView: View {
+    
     var onComplete: () -> Void
     let mode: DogMode
-    @ObservedObject var matchRequestVM: MatchRequestViewModel
-
-    @State private var navigateToHome = false
     
+    @EnvironmentObject var matchRequestVM: MatchRequestViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
+    
+
     var body: some View {
         
         ZStack {
@@ -26,17 +29,24 @@ struct LoadingToHomeView: View {
                     .foregroundColor(.black)
             }
         }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                onComplete()
-                navigateToHome = true
-            }
+//        .onAppear {
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+//                onComplete()
+//                navigateToHome = true
+//            }
+//        }
+//        .navigationDestination(isPresented: $navigateToHome) {
+//            HomeView()
+//                .environmentObject(MatchRequestViewModel(authVM: AuthViewModel()))
+//        }
+        .task {
+            // preloading on first home load
+            await matchRequestVM.loadCurrentDogId()
+
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+
+            onComplete()
         }
-        .navigationDestination(isPresented: $navigateToHome) {
-            HomeView()
-                .environmentObject(MatchRequestViewModel(authVM: AuthViewModel()))
-        }
-        
     }
 }
 

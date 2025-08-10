@@ -6,10 +6,8 @@ struct ChatInputBar: View {
     var onCreateMeetup: () -> Void
     @FocusState private var isFocused: Bool
     
-    @Environment(\.presentationMode) var presentationMode
-
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 4) {
             // Text field
             TextField("message...", text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
@@ -47,10 +45,7 @@ struct ChatInputBar: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(Color(.systemGroupedBackground))
-        .onTapGesture {
-            hideKeyboard()
-        }
+        .background(.white)
     }
 
     private var canSend: Bool {
@@ -60,8 +55,8 @@ struct ChatInputBar: View {
     private func trySend() {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        print("🟢 ChatInputBar.trySend fired with '\(trimmed)'") // temp debug
         onSend(trimmed)
-        text = ""
         isFocused = false
     }
 }
