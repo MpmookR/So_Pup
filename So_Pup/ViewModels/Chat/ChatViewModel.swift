@@ -90,15 +90,14 @@ final class ChatViewModel: ObservableObject {
                 // Build enriched card list from snapshot
                 buildTask?.cancel()
                 buildTask = Task { [weak self] in
-                    guard let self, let currentDogId = self.currentDogId else { return }
+                    guard let self = self, let currentDogId = self.currentDogId else { return }
+                    
+                    // Build cards (we're already on MainActor)
                     let cards = await ChatCardBuilder.build(from: rooms,
-                                                            currentDogId: currentDogId,
-                                                            profileService: self.profileService)
+                                                          currentDogId: currentDogId,
+                                                          profileService: self.profileService)
                     self.chatRoomProfiles = cards
                 }
-                
-                // triggers a secondary refresh via API (keeps UI in sync with backend state)
-                Task { await self.loadChatRoomsWithProfiles() }
             }
     }
     
@@ -154,10 +153,12 @@ final class ChatViewModel: ObservableObject {
             self.chatRooms = rooms
             buildTask?.cancel()
             buildTask = Task { [weak self] in
-                guard let self, let currentDogId = self.currentDogId else { return }
+                guard let self = self, let currentDogId = self.currentDogId else { return }
+                
+                // Build cards (we're already on MainActor)
                 let cards = await ChatCardBuilder.build(from: rooms,
-                                                        currentDogId: currentDogId,
-                                                        profileService: self.profileService)
+                                                      currentDogId: currentDogId,
+                                                      profileService: self.profileService)
                 self.chatRoomProfiles = cards
             }
         } catch {

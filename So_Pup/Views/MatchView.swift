@@ -21,9 +21,10 @@ struct MatchView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                CustomNavBar(title: "Match")
+
                 TopTabSwitcher(tabs: tabOptions, selectedTab: $selectedTab)
-                
+                    .padding(.top, 16)
+
                 ScrollView {
                     VStack(spacing: 16) {
                         if selectedTab == "Pending" {
@@ -109,8 +110,6 @@ struct MatchView: View {
                         Text("Loading...")
                     }
                 }
-                .background(Color.white)
-                .ignoresSafeArea()
             }
         }
     }

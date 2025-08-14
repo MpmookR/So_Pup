@@ -14,9 +14,9 @@ struct ChatView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                CustomNavBar(title: "Chat")
+            VStack {
                 TopTabSwitcher(tabs: tabOptions, selectedTab: $selectedTab)
+                    .padding(.top, 16)
                 
                 ScrollView {
                     LazyVStack(spacing: 16) {
@@ -36,7 +36,12 @@ struct ChatView: View {
                                         userCoordinate: card.owner.coordinate,
                                         isNew: chatVM.isChatRoomNew(card.room)
                                     )
-                                    .onTapGesture { selectedCard = card }
+                                    .onTapGesture {
+                                        // Ensure we're on main thread for UI updates
+                                        DispatchQueue.main.async {
+                                            selectedCard = card
+                                        }
+                                    }
                                 }
                             }
                         } else {
@@ -73,7 +78,6 @@ struct ChatView: View {
                 if let id = router.pendingChatRoomId { tryNavigate(to: id) }
             }
             .background(.white)
-            .ignoresSafeArea()
         }
     }
     
