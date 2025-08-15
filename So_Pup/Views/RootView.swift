@@ -14,7 +14,6 @@ struct RootView: View {
                             .transition(.opacity)
                     } else {
                         OnboardingFlowView()
-                            .environmentObject(OnboardingViewModel())
                             .transition(.opacity)
                     }
                 } else {
@@ -22,8 +21,10 @@ struct RootView: View {
                         .transition(.opacity)
                 }
             }
+            .animation(.easeInOut(duration: 0.5), value: authViewModel.isLoggedIn)
             .animation(.easeInOut(duration: 0.5), value: authViewModel.hasCompletedOnboarding)
         }
+        .id(authViewModel.isLoggedIn) // resets the entire nav stack when login flips
     }
 }
 

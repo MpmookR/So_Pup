@@ -1,6 +1,6 @@
 import Foundation
 
-struct DogBehavior: Codable {
+struct DogBehavior: Codable, Equatable, Hashable {
     // Selected from predefined options
     var playStyles: [String]
     var preferredPlayEnvironments: [String]

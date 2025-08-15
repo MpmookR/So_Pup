@@ -6,6 +6,8 @@ struct FullDogDetailsView: View {
     let owner: UserModel
     let userCoordinate: Coordinate
     let reviews: [DogReview]
+    
+    @ObservedObject var matchRequestVM: MatchRequestViewModel // share ref
     var onBack: (() -> Void)? = nil
     
     @State private var showRequestView = false
@@ -30,26 +32,26 @@ struct FullDogDetailsView: View {
                         
                         Divider()
                         
-                            if !reviews.isEmpty {
-                                VStack(alignment: .leading, spacing: 16) {
-                                    Text("Reviews")
-                                        .font(.headline)
-                                        .foregroundColor(Color.socialText)
-                                    
-                                    ForEach(reviews) { review in
-                                        ReviewSection(review: review)
-                                    }
+                        if !reviews.isEmpty {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Reviews")
+                                    .font(.headline)
+                                    .foregroundColor(Color.socialText)
+                                
+                                ForEach(reviews) { review in
+                                    ReviewSection(review: review)
                                 }
-                            } else {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Reviews")
-                                        .font(.headline)
-                                        .foregroundColor(Color.socialText)
-                                    
-                                    Text("No reviews just yet. Once \(dog.displayName) has a few successful meetups, you’ll see what others think!")
-                                        .font(.body)
-                                        .foregroundColor(.gray)
-                                        .padding(.top, 16)
+                            }
+                        } else {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Reviews")
+                                    .font(.headline)
+                                    .foregroundColor(Color.socialText)
+                                
+                                Text("No reviews just yet. Once \(dog.displayName) has a few successful meetups, you’ll see what others think!")
+                                    .font(.body)
+                                    .foregroundColor(.gray)
+                                    .padding(.top, 16)
                             }
                         }
                     }
@@ -59,44 +61,66 @@ struct FullDogDetailsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .navigationBarBackButtonHidden(true)
                 
-                // match button
-                ConnectButton(alreadyConnected: false) {
-                    showRequestView = true
+                // MARK: - match button
+                ConnectButton(
+                    label: matchRequestVM.isRequestPending ? "Request Sent" : "Let's Connect",
+                    alreadyConnected: matchRequestVM.isRequestPending
+                ) {
+                    if !matchRequestVM.isRequestPending {
+                        showRequestView = true
+                    }
                 }
+                .disabled(matchRequestVM.isRequestPending)
                 .padding(.horizontal)
-                .navigationDestination(isPresented: $showRequestView){
+                .navigationDestination(isPresented: $showRequestView) {
                     SendConnectRequestView(
                         dogName: dog.displayName,
-                        onBack: {showRequestView = false},
+                        onBack: { showRequestView = false },
                         onSend: { message in
-                            // MARK: Call match request logic here
-                            print("Sent message: \(message)")
-                            showRequestView = false
+                            Task {
+                                if let fromDogId = matchRequestVM.currentDogId {
+                                    await matchRequestVM.sendRequest(
+                                        fromDogId: fromDogId,
+                                        toUserId: owner.id,
+                                        toDogId: dog.id,
+                                        message: message
+                                    )
+                                    // ✅ Refresh match requests after sending
+                                    await matchRequestVM.fetchMatchRequests()
+
+                                } else {
+                                    matchRequestVM.alertMessage = "❌ Your dog profile could not be loaded."
+                                    matchRequestVM.showAlert = true
+                                }
+                            }
                         }
                     )
+                    .alert(isPresented: $matchRequestVM.showAlert) {
+                        Alert(
+                            title: Text("Match Request"),
+                            message: Text(matchRequestVM.alertMessage),
+                            dismissButton: .default(Text("OK"), action:{
+                                showRequestView = false
+                            })
+                        )
+                    }
                 }
-                
+            }
+            .task {
+                if matchRequestVM.currentDogId == nil {
+                    await matchRequestVM.loadCurrentDogId()
+                }
+                if let fromId = matchRequestVM.currentDogId {
+                    await matchRequestVM.checkIfRequestExists(fromDogId: fromId, toDogId: dog.id)
+                }
             }
         }
     }
 }
 
-//#Preview {
-//    var dog = MockDogData.dog3
-//    let owner = MockUserData.user3
-//    dog.ownerId = owner.id
-//
-//    let coordinate = owner.coordinate
-//    let dogReviews = MockDogReviewData.all.filter { $0.reviewedDogId == dog.id }
-//
-//    NavigationView {
-//        FullDogDetailsView(
-//            dog: dog,
-//            owner: owner,
-//            userCoordinate: coordinate,
-//            reviews: dogReviews
-//        )
-//    }
-//}
-
-
+    
+    
+    
+    
+    
+    

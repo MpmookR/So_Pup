@@ -4,7 +4,7 @@ struct SendConnectRequestView: View {
     var dogName: String
     var onBack: () -> Void
     var onSend: (_ message: String) -> Void
-
+    
     @State private var message: String = "Hi! Our pups might get along — happy to connect and see if they'd enjoy a walk together! 🐶"
 
     var body: some View {

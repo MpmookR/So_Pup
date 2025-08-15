@@ -24,7 +24,13 @@ class AuthViewModel: ObservableObject {
             await checkAuthStatus()
             
             if isLoggedIn {
-                fetchIDToken()
+                do {
+                    let token = try await fetchIDToken()
+                    print("✅ ID Token from AuthViewModel: \(token)")
+                    // Optionally: store in memory or send to backend here
+                } catch {
+                    print("❌ Failed to fetch ID token in AuthViewModel: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -162,23 +168,31 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    func fetchIDToken() {
+    func fetchIDToken() async throws -> String {
         guard let user = Auth.auth().currentUser else {
             print("❌ No user is currently signed in.")
-            return
+            throw NSError(
+                domain: "AuthService",
+                code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "User not logged in"])
         }
         
-        user.getIDToken { token, error in
-            if let error = error {
-                print("❌ Failed to fetch ID token: \(error.localizedDescription)")
-                return
-            }
-            
-            if let token = token {
-                print("✅ Firebase ID Token:\n\(token)")
+        return try await withCheckedThrowingContinuation { continuation in
+            user.getIDTokenForcingRefresh(true) { token, error in
+                if let error = error {
+                    print("❌ Failed to fetch ID token: \(error.localizedDescription)")
+                    continuation.resume(throwing: error)
+                } else if let token = token {
+//                    print("✅ Fetched Firebase ID Token:\n\(token)")
+                    continuation.resume(returning: token)
+                } else {
+                    continuation.resume(
+                        throwing: NSError(
+                            domain: "AuthService",
+                            code: 500,
+                            userInfo: [NSLocalizedDescriptionKey: "Unknown token error"]))
+                }
             }
         }
     }
-    
-    
 }

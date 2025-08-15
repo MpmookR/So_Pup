@@ -1,6 +1,6 @@
 import Foundation
 
-struct DogModel: Identifiable, Codable, DogProfile, PuppyProfile, SocialDogProfile {
+struct DogModel: Identifiable, Codable, Hashable, DogProfile, PuppyProfile, SocialDogProfile {
     var id: String = UUID().uuidString
     
     var ownerId: String
@@ -33,7 +33,7 @@ struct DogModel: Identifiable, Codable, DogProfile, PuppyProfile, SocialDogProfi
 }
 
 /// Equatable allows values of a type to be compared using == or !=
-struct HealthStatus : Codable, Equatable{
+struct HealthStatus : Codable, Equatable, Hashable{
     var fleaTreatmentDate: Date?
     var wormingTreatmentDate: Date?
 }

@@ -4,14 +4,14 @@
 
 //CaseIterable
 ///Allows enumName.allCases to return all cases
-enum DogMode: String, CaseIterable, Identifiable, Codable {
+enum DogMode: String, CaseIterable, Identifiable, Codable, Equatable, Hashable {
     case puppy     // For dogs under 12 weeks
     case social    // For dogs 12 weeks and older
 
     var id: String { rawValue }
 }
 
-enum DogProfileStatus: String, CaseIterable, Identifiable, Codable {
+enum DogProfileStatus: String, CaseIterable, Identifiable, Codable, Equatable, Hashable {
     case incomplete   // Missing required info or treatments
     case ready        // All info filled and verified
 
@@ -19,7 +19,7 @@ enum DogProfileStatus: String, CaseIterable, Identifiable, Codable {
 }
 
 
-enum UserGenderOption: String, CaseIterable, Identifiable, Codable{
+enum UserGenderOption: String, CaseIterable, Identifiable, Codable, Equatable, Hashable{
     case female = "female"
     case male = "male"
     case other = "other"
@@ -29,7 +29,7 @@ enum UserGenderOption: String, CaseIterable, Identifiable, Codable{
 }
 
 
-enum DogGenderOption: String, Codable, CaseIterable, Identifiable {
+enum DogGenderOption: String, Codable, CaseIterable, Identifiable, Equatable, Hashable {
     case male
     case female
     
@@ -52,7 +52,7 @@ let languageOptions: [String] = [
     "Turkish", "Farsi",
 ]
 
-enum SizeOption: String, CaseIterable, Identifiable, Codable {
+enum SizeOption: String, CaseIterable, Identifiable, Codable, Equatable, Hashable {
     case extraSmall = "Extra Small"
     case small = "Small"
     case medium = "Medium"
@@ -63,7 +63,7 @@ enum SizeOption: String, CaseIterable, Identifiable, Codable {
 }
 
 
-enum HealthVerificationStatus: String, CaseIterable, Codable {
+enum HealthVerificationStatus: String, CaseIterable, Codable, Equatable, Hashable {
     case verified // if flea treament and worming Treatment is up to date
     case unverified
     
@@ -108,7 +108,7 @@ let triggerSensitivityOptions: [String] = [
 
 // MARK: - not in firestore yet
 
-enum PreferredAgeOption: String, CaseIterable, Identifiable {
+enum PreferredAgeOption: String, CaseIterable, Identifiable, Equatable, Hashable {
     var id: String { rawValue }
 
     case puppyAge = "12w – 1y"
@@ -126,6 +126,19 @@ enum PreferredAgeOption: String, CaseIterable, Identifiable {
     }
 }
 
+enum MatchRequestStatus: String, CaseIterable, Identifiable, Codable, Equatable, Hashable {
+    var id: String { rawValue }
+    
+    case pending
+    case accepted
+    case rejected
+}
+
+enum MessageType: String, Codable {
+    case text
+    case meetupRequest
+    case system // eg; Meetups are disabled in Puppy Mode
+}
 
 
 

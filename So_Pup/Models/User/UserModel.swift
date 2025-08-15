@@ -1,6 +1,6 @@
 import Foundation
 
-struct UserModel: Identifiable, Codable {
+struct UserModel: Identifiable, Codable, Hashable {
     // Identity
     var id: String
     var name: String
@@ -20,10 +20,8 @@ struct UserModel: Identifiable, Codable {
     // Dog Link
     var primaryDogId: String
 
-    // Testing
-    // var isMock: Bool = false
     var isMock: Bool?
-
+    var pushToken: String? // FCM token
 }
 
 // MARK: In Firestore, use whereField("isMock", isEqualTo: false) to exclude them in production fetch

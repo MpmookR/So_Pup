@@ -1,32 +1,40 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @State private var selectedTabIndex = 0
+
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var chatVM: ChatViewModel
+    @EnvironmentObject var matchRequestVM: MatchRequestViewModel
+
+    @StateObject private var router = GlobalRouter()
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTabIndex) {
             HomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
+                .tabItem { Label("Home", systemImage: "house.fill") }
+                .tag(0)
 
             MatchView()
-                .tabItem {
-                    Image(systemName: "heart.circle.fill")
-                    Text("Match")
-                }
+                .tabItem { Label("Match", systemImage: "heart.circle.fill") }
+                .tag(1)
 
             ChatView()
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                    Text("Chat")
-                }
+                .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right.fill") }
+                .tag(2)
 
             ProfileView()
-                .tabItem {
-                    Image(systemName: "person.crop.circle.fill")
-                    Text("Profile")
-                }
+                .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
+                .tag(3)
         }
-        .accentColor(.yellow) // Optional: matches your app's theme
+        .tint(Color.socialAccent)
+        .environmentObject(router) // only router is created here
+
+        // Flip to Chat tab when a room is created
+        .onChange(of: matchRequestVM.pendingChatRoomId, initial: false) { _, newChatId in
+            guard let id = newChatId else { return }
+            router.pendingChatRoomId = id
+            selectedTabIndex = 2
+        }
     }
 }

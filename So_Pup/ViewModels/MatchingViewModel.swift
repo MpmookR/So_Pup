@@ -8,6 +8,7 @@ class MatchingViewModel: ObservableObject {
     
     @Published var matchedProfiles: [MatchProfile] = []
     @Published var userCoordinate: CLLocationCoordinate2D? // for user distance calculation
+    @Published var filterSettings: DogFilterSettings = DogFilterSettings()
     
     private let locationService = LocationService()
     private let profileDataService = ProfileDataService()
@@ -27,6 +28,12 @@ class MatchingViewModel: ObservableObject {
         return allDogs.filter { $0.ownerId != userId }.map { $0.id }
     }
 
+    func initialize(with filter: DogFilterSettings) async {
+        self.filterSettings = filter // store the filter setting in swiftData
+        await fetchLocation() // get the user location
+        await fetchData() // load from firestore
+        await applyScoring(using: filter)  // Score and filter matches based on the filter
+    }
     
     // Load location and data, then compute matches
     func load() async {

@@ -6,6 +6,7 @@ import FirebaseStorage
 import CoreLocation
 import GeoFire
 import GeoFireUtils
+import FirebaseMessaging
 
 ///https://firebase.google.com/docs/storage/ios/start?
 @MainActor
@@ -21,7 +22,7 @@ class OnboardingViewModel: ObservableObject {
     @Published var userCoordinate: CLLocationCoordinate2D?
     @Published var locationErrorMessage: String?
     @Published var locationPermissionDenied: Bool = false
-    
+    @Published var pushToken: String? = nil
     
     // Dog
     @Published var dogName = ""
@@ -159,7 +160,7 @@ class OnboardingViewModel: ObservableObject {
             let userRef = db.collection("users").document(uid)
             
             // MARK: - Create dog model
-            var dog = DogModel( //using var as dog id is assigned after creation
+            let dog = DogModel(
                 id: dogId,
                 ownerId: uid,
                 name: dogName,
@@ -180,6 +181,8 @@ class OnboardingViewModel: ObservableObject {
                 isMock: false
             )
             
+            self.pushToken = await PushManager.shared.getFCMToken()
+
             // MARK: - Create user model
             let user = UserModel(
                 id: uid,
@@ -192,7 +195,9 @@ class OnboardingViewModel: ObservableObject {
                 bio: bio,
                 languages: languages,
                 customLanguage: nil,
-                primaryDogId: dogId
+                primaryDogId: dogId,
+                isMock: false,
+                pushToken: pushToken
             )
             
             

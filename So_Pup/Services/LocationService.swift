@@ -1,7 +1,8 @@
 import Foundation
 import CoreLocation
+import MapKit
 
-/// A service that handles location permission, coordinates, and reverse geocoding into city name.
+/// A service that handles location permission, coordinates, reverse geocoding, and location search.
 final class LocationService: NSObject, CLLocationManagerDelegate {
     
     private let manager = CLLocationManager()
@@ -33,6 +34,55 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Search for locations based on search query
+    func searchLocations(query: String) async throws -> [MKMapItem] {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        request.resultTypes = .pointOfInterest
+        
+        let search = MKLocalSearch(request: request)
+        let response = try await search.start()
+        
+        return response.mapItems
+    }
+    
+    /// Get current location as MKMapItem
+    func getCurrentLocationMapItem() async throws -> MKMapItem {
+        let (coordinate, city) = try await requestLocation()
+        
+        // Create a map item for current location
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = city ?? "Current Location"
+        
+        return mapItem
+    }
+    
+    /// Convert coordinate to address string
+    func coordinateToAddress(coordinate: CLLocationCoordinate2D) async -> String? {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let geocoder = CLGeocoder()
+        
+        return await withCheckedContinuation { continuation in
+            geocoder.reverseGeocodeLocation(location) { placemarks, _ in
+                guard let placemark = placemarks?.first else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                
+                let address = [
+                    placemark.thoroughfare,
+                    placemark.subThoroughfare,
+                    placemark.locality,
+                    placemark.administrativeArea,
+                    placemark.postalCode,
+                    placemark.country
+                ].compactMap { $0 }.joined(separator: ", ")
+                
+                continuation.resume(returning: address.isEmpty ? nil : address)
+            }
+        }
+    }
 
     /// Delegate method: Called when a location is successfully retrieved
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -56,7 +106,6 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         continuation.resume(throwing: error)
     }
 
-
     /// Uses CLGeocoder to resolve a CLLocation into a city name asynchronously.
     private func reverseGeocode(_ location: CLLocation) async -> String? {
         let geocoder = CLGeocoder()
@@ -72,6 +121,5 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     enum LocationError: Error {
         case noLocation
         case permissionDenied
-
     }
 }

@@ -28,7 +28,7 @@ struct ProfileMatchCard: View {
                 
                 VStack (spacing: 4) {
                     Button(action: {
-                        // Match logic
+                        // Match request logic
                     }) {
                         Image(systemName: "plus.message.fill")
                             .font(.title3)
@@ -42,7 +42,7 @@ struct ProfileMatchCard: View {
                 }
             }
             
-            // Owner avatar + dog details
+            //  avatar + dog details
             HStack(alignment: .center, spacing: 8) {
                 if let url = dog.imageURLs.first, let imageURL = URL(string: url) {
                     AsyncImage(url: imageURL) { image in
