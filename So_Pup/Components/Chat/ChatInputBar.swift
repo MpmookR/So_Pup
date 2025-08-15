@@ -4,7 +4,9 @@ struct ChatInputBar: View {
     @Binding var text: String
     var onSend: (String) -> Void
     var onCreateMeetup: () -> Void
+    var isMeetupAllowed: Bool = true
     @FocusState private var isFocused: Bool
+    @State private var showPuppyModeAlert = false
     
     var body: some View {
         HStack(spacing: 4) {
@@ -25,13 +27,18 @@ struct ChatInputBar: View {
                 .onSubmit { trySend() }
 
             // Create Meet-up button
-            Button(action: onCreateMeetup) {
-                Image(systemName: "calendar")
+            Button(action: {
+                if isMeetupAllowed {
+                    onCreateMeetup()
+                } else {
+                    showPuppyModeAlert = true
+                }
+            }) {
+                Image(systemName: isMeetupAllowed ? "calendar" : "calendar.badge.exclamationmark")
                     .imageScale(.large)
                     .frame(width: 44, height: 44)
             }
-            .foregroundColor(Color.socialAccent)
-            .accessibilityLabel("Create meet-up")
+            .foregroundColor(isMeetupAllowed ? Color.socialAccent : .gray)
 
             // Send button
             Button(action: trySend) {
@@ -41,11 +48,18 @@ struct ChatInputBar: View {
             }
             .foregroundColor(canSend ? Color.socialAccent : .gray)
             .disabled(!canSend)
-            .accessibilityLabel("Send message")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(.white)
+        .alert("🚫 Meet-up is not available", isPresented: $showPuppyModeAlert) {
+            Button("OK") {
+                showPuppyModeAlert = false
+            }
+            .foregroundColor(Color.socialText)
+        } message: {
+            Text("One of the chatroom members is in puppy mode.Puppies under 12 weeks should avoid in-person interactions until fully vaccinated.\nYou'll be able to schedule meet-ups once both dogs are in Social Mode")
+        }
     }
 
     private var canSend: Bool {

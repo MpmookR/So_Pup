@@ -24,6 +24,8 @@ struct ChatCardBuilder {
                       currentDogId: String,
                       profileService: ProfileDataService) async -> [ChatRoomCardData] {
 
+        var dogCache:  [String: DogModel] = [:]
+        var userCache: [String: UserModel] = [:]
         var results: [ChatRoomCardData] = []
 
         await withTaskGroup(of: ChatRoomCardData?.self) { group in
@@ -32,11 +34,24 @@ struct ChatCardBuilder {
                     // Pick the "other" dog id in this room
                     guard let otherDogId = room.dogIds.first(where: { $0 != currentDogId }) else { return nil }
 
-                    // Fetch dog data
-                    guard let dog = try? await profileService.fetchDog(by: otherDogId) else { return nil }
+                    // DOG (inline cache)
+                    let dog: DogModel
+                    if let cached = dogCache[otherDogId] {
+                        dog = cached
+                    } else if let fetched = try? await profileService.fetchDog(by: otherDogId) {
+                        dogCache[otherDogId] = fetched
+                        dog = fetched
+                    } else { return nil }
 
-                    // Fetch owner data from dog's ownerId
-                    guard let owner = try? await profileService.fetchUser(by: dog.ownerId) else { return nil }
+                    // OWNER from dog's ownerId (don’t trust room.userIds)
+                    let ownerId = dog.ownerId
+                    let owner: UserModel
+                    if let cached = userCache[ownerId] {
+                        owner = cached
+                    } else if let fetched = try? await profileService.fetchUser(by: ownerId) {
+                        userCache[ownerId] = fetched
+                        owner = fetched
+                    } else { return nil }
 
                     return ChatRoomCardData(room: room, dog: dog, owner: owner)
                 }
@@ -83,4 +98,3 @@ enum ChatReadState {
         }
     }
 }
-

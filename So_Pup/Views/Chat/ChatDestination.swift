@@ -19,10 +19,11 @@ struct ChatDestination: View {
         let uid = Auth.auth().currentUser?.uid ?? ""
         ChatScreen(
             dog: card.dog,
-            room: card.room,                 
+            room: card.room,
             currentUserId: uid,
             onBack: onBack,
-            sendMessage: sendVM
+            sendMessage: sendVM,
+            authVM: authViewModel
         )
     }
 }

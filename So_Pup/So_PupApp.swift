@@ -11,23 +11,31 @@ import FirebaseMessaging
 struct SoPupApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate  // to request the apnToken
-
+    
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var onboardingViewModel = OnboardingViewModel()
     @StateObject private var appOptionsService = AppOptionsService()
     @StateObject private var matchRequestVM: MatchRequestViewModel
     @StateObject private var chatVM: ChatViewModel
-
+    @StateObject private var meetupVM: MeetupViewModel
+    @StateObject private var router: GlobalRouter
+    
     init() {
         FirebaseApp.configure()
         PushManager.shared.setupPush()
-
-        let authVM = AuthViewModel()
-        _authViewModel = StateObject(wrappedValue: authVM)
-        _matchRequestVM = StateObject(wrappedValue: MatchRequestViewModel(authVM: authVM))
-        _chatVM         = StateObject(wrappedValue: ChatViewModel(authVM: authVM))
         
-    //    configureFirebaseEmulators()
+        // Build a single auth VM and pass it to dependents
+        let authVM = AuthViewModel()
+        
+        _authViewModel      = StateObject(wrappedValue: authVM)
+        _onboardingViewModel = StateObject(wrappedValue: OnboardingViewModel())
+        _appOptionsService  = StateObject(wrappedValue: AppOptionsService())
+        _matchRequestVM     = StateObject(wrappedValue: MatchRequestViewModel(authVM: authVM))
+        _chatVM             = StateObject(wrappedValue: ChatViewModel(authVM: authVM))
+        _meetupVM           = StateObject(wrappedValue: MeetupViewModel(authVM: authVM))
+        _router             = StateObject(wrappedValue: GlobalRouter())
+        
+        //    configureFirebaseEmulators()
     }
     
     var body: some Scene {
@@ -37,7 +45,8 @@ struct SoPupApp: App {
                 .environmentObject(onboardingViewModel)
                 .environmentObject(appOptionsService)
                 .environmentObject(matchRequestVM)
-                .environmentObject(chatVM) 
+                .environmentObject(chatVM)
+                .environmentObject(meetupVM)
                 .modelContainer(for: DogFilterSettingsModel.self)
                 .task {
                     await authViewModel.checkAuthStatus()
@@ -46,8 +55,9 @@ struct SoPupApp: App {
                 }
         }
     }
+}
 
-    /// Connect iOS frontend to local Firebase emulators
+/// Connect iOS frontend to local Firebase emulators
 //    private func configureFirebaseEmulators() {
 //        let localIP = "192.168.0.49" // my mac and iOSdevice
 //
@@ -65,4 +75,4 @@ struct SoPupApp: App {
 //        // Functions Emulator
 //        Functions.functions().useEmulator(withHost: localIP, port: 5001)
 //    }
-}
+

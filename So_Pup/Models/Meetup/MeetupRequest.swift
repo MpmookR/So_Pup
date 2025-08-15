@@ -4,6 +4,7 @@ struct MeetupRequest: Hashable, Codable {
     let id: String
     let chatRoomId: String
     let senderId: String
+    let senderDogId: String // Added missing field
     let receiverId: String
     let receiverDogId: String
     let proposedTime: Date
@@ -16,17 +17,18 @@ struct MeetupRequest: Hashable, Codable {
 }
 
 enum MeetupStatus: String, Codable {
-    case pending
-    case upcoming
-    case declined
-    case completed
+    case pending = "pending"
+    case accepted = "accepted" // Backend uses "accepted"
+    case rejected = "rejected" // Backend uses "rejected"
+    case completed = "completed"
+    case cancelled = "cancelled" // Backend also supports cancelled
 
     var isActive: Bool {
-        return self == .pending || self == .upcoming
+        return self == .pending || self == .accepted
     }
 
     var isCompleted: Bool {
-        return self == .declined || self == .completed
+        return self == .rejected || self == .completed || self == .cancelled
     }
 
     var allowsComment: Bool {

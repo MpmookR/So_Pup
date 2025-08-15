@@ -8,8 +8,20 @@ struct ChatScreen: View {
         
     @StateObject private var messageService = FirestoreMessageService()
     @ObservedObject var sendMessage: SendMessageViewModel
-        
+    @StateObject private var meetupVM: MeetupViewModel
+    
     @State private var scrollTarget: String?
+    @State private var showCreateMeetup = false
+
+
+    init(dog: DogModel, room: ChatRoom, currentUserId: String, onBack: (() -> Void)? = nil, sendMessage: SendMessageViewModel, authVM: AuthViewModel) {
+        self.dog = dog
+        self.room = room
+        self.currentUserId = currentUserId
+        self.onBack = onBack
+        self.sendMessage = sendMessage
+        self._meetupVM = StateObject(wrappedValue: MeetupViewModel(authVM: authVM))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -43,12 +55,23 @@ struct ChatScreen: View {
                 onSend: { _ in
                     print("🟢 ChatInputBar onSend fired")
                     Task { await sendMessage.send() } },
-                onCreateMeetup: { /* open meet-up */ }
+                onCreateMeetup: { showCreateMeetup = true },
+                isMeetupAllowed: canCreateMeetup
             )
             .disabled(sendMessage.isSending)
         }
         .padding(.horizontal)
         .background(.white)
+        .sheet(isPresented: $showCreateMeetup) {
+            CreateMeetup(
+                meetupVM: meetupVM,
+                onBack: { showCreateMeetup = false },
+                chatRoomId: room.id,
+                receiverId: room.otherUserId(currentUserId: currentUserId) ?? "",
+                receiverDogId: dog.id,
+                receiverDogName: dog.displayName
+            )
+        }
         .onAppear { messageService.listenToMessages(chatRoomId: room.id) }
         .onDisappear { messageService.stopListening() }
         .onTapGesture { hideKeyboard() }
@@ -65,5 +88,14 @@ struct ChatScreen: View {
                     )
                     print("🧭 setContext ok=\(ok) room=\(room.id) myDogId=\(myDogId)")
                 }
+    }
+        // Check if meetups are allowed (both dogs must be in social mode)
+    private var isMeetupAllowed: Bool {
+        return dog.mode == .social
+    }
+    
+    // Check if meetups are available (both dogs must be in social mode)
+    private var canCreateMeetup: Bool {
+        return dog.mode == .social
     }
 }
