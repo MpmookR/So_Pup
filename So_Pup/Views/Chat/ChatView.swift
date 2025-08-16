@@ -34,12 +34,10 @@ struct ChatView: View {
 
                 ScrollView {
                     tabContent
-//                        .padding(.horizontal)
                         .padding(.top)
                 }
             }
             .padding(.top)
-//            .padding(.horizontal)
             .background(.white)
             // Navigation
             .navigationDestination(item: $selectedCard) { card in

@@ -50,6 +50,7 @@ struct ChatListSection: View {
                 }
             }
         }
+        .padding(.horizontal)
         .animation(.easeInOut, value: isLoading)
         .animation(.easeInOut, value: cards.count)
     }

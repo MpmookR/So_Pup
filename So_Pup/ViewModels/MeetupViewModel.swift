@@ -60,6 +60,7 @@ final class MeetupViewModel: ObservableObject {
                 createdAt: Date(),
                 updatedAt: Date()
             )
+            print("🟢 MeetupVM.createMeetupRequest fired with meetup: \(meetup)")
             
             let _ = try await MeetupService.shared.createMeetupRequest(
                 chatRoomId: chatRoomId,
@@ -70,7 +71,7 @@ final class MeetupViewModel: ObservableObject {
                 receiverDogId: receiverDogId,
                 authToken: token
             )
-            
+            print("🟢 MeetupVM.createMeetupRequest success")
             await showSuccess("Meetup request sent successfully!")
             
         } catch {
@@ -118,7 +119,7 @@ final class MeetupViewModel: ObservableObject {
         /// Load meetups for current user with optional filters
         func loadUserMeetups(type: String? = nil, status: MeetupStatus? = nil) async {
             guard let currentUser = Auth.auth().currentUser else { return }
-            
+            print("🟢 MeetupViewModel.loadUserMeetups fired with type: \(type), status: \(status)")
             isLoading = true
             do {
                 let token = try await authVM.fetchIDToken()
@@ -128,8 +129,10 @@ final class MeetupViewModel: ObservableObject {
                     status: status,
                     authToken: token
                 )
-                userMeetups = meetups
+                print("🟢 MeetupViewModel.loadUserMeetups fetched \(meetups.count) meetups")
+                self.userMeetups = meetups
             } catch {
+                print("🚫 MeetupViewModel.loadUserMeetups error: \(error.localizedDescription)")
                 await showError("Failed to load meetups: \(error.localizedDescription)")
             }
             isLoading = false

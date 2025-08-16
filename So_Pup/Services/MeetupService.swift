@@ -143,8 +143,6 @@ final class MeetupService {
         print("✅ Meetup marked as complete")
     }
 
-    
-    /// Fetch meetups for a user with optional filters
     /// Fetch meetups for a user with optional filters
     func fetchUserMeetups(
         userId: String,
@@ -181,7 +179,7 @@ final class MeetupService {
         
         // 6. Send the request and get the response
         let (data, response) = try await URLSession.shared.data(for: request)
-        
+
         // 7. Ensure the response status code is in the success range (200-299)
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
@@ -199,7 +197,5 @@ final class MeetupService {
         // 9. Return the decoded array of meetups
         return result.meetups
     }
-
-
 
 }
