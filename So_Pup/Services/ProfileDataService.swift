@@ -28,14 +28,6 @@ final class ProfileDataService {
         return try doc.data(as: UserModel.self)
     }
     
-    // MARK: - Fetch Dog Reviews
-    func fetchReviews(for dogId: String) async throws -> [DogReview] {
-        let snapshot = try await db.collection("dogReviews")
-            .whereField("reviewedDogId", isEqualTo: dogId)
-            .getDocuments()
-        
-        return snapshot.documents.compactMap { try? $0.data(as: DogReview.self) }
-    }
 }
 
 
