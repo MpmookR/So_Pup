@@ -5,6 +5,8 @@ struct ProfileMatchCard: View {
     let owner: UserModel
     let userCoordinate: Coordinate
     
+    @EnvironmentObject var reviewVM: ReviewViewModel
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Top Row
@@ -27,14 +29,8 @@ struct ProfileMatchCard: View {
                 Spacer()
                 
                 VStack (spacing: 4) {
-                    Button(action: {
-                        // Match request logic
-                    }) {
-                        Image(systemName: "plus.message.fill")
-                            .font(.title3)
-                            .foregroundColor(dog.mode == .puppy ? Color.puppyButton : Color.socialButton)
-                    }
-                    
+                    ReviewStatsBadge(ownerId: owner.id)
+
                     Text(owner.coordinate.formattedDistance(from: userCoordinate))
                         .font(.caption)
                         .foregroundColor(Color.socialText)
@@ -102,7 +98,7 @@ struct ProfileMatchCard: View {
 #Preview {
     VStack(spacing: 20) {
         ProfileMatchCard(
-            dog: MockDogData.dog1, 
+            dog: MockDogData.dog1,
             owner: MockUserData.user1,
             userCoordinate: MockUserData.user2.coordinate
         )

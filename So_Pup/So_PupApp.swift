@@ -16,24 +16,30 @@ struct SoPupApp: App {
     @StateObject private var onboardingViewModel = OnboardingViewModel()
     @StateObject private var appOptionsService = AppOptionsService()
     @StateObject private var matchRequestVM: MatchRequestViewModel
+    @StateObject private var matchingVM: MatchingViewModel
     @StateObject private var chatVM: ChatViewModel
     @StateObject private var meetupVM: MeetupViewModel
+    @StateObject private var reviewVM: ReviewViewModel
     @StateObject private var router: GlobalRouter
     
     init() {
         FirebaseApp.configure()
         PushManager.shared.setupPush()
         
-        // Build a single auth VM and pass it to dependents
-        let authVM = AuthViewModel()
+        // Create dependencies in order
+        let authVM = AuthViewModel()    // Build a single auth VM and pass it to dependents
+        let matchReqVM = MatchRequestViewModel(authVM: authVM)
+        let matchVM = MatchingViewModel(matchRequestVM: matchReqVM)
         
-        _authViewModel      = StateObject(wrappedValue: authVM)
-        _onboardingViewModel = StateObject(wrappedValue: OnboardingViewModel())
-        _appOptionsService  = StateObject(wrappedValue: AppOptionsService())
-        _matchRequestVM     = StateObject(wrappedValue: MatchRequestViewModel(authVM: authVM))
-        _chatVM             = StateObject(wrappedValue: ChatViewModel(authVM: authVM))
-        _meetupVM           = StateObject(wrappedValue: MeetupViewModel(authVM: authVM))
-        _router             = StateObject(wrappedValue: GlobalRouter())
+        _authViewModel          = StateObject(wrappedValue: authVM)
+        _onboardingViewModel    = StateObject(wrappedValue: OnboardingViewModel())
+        _appOptionsService      = StateObject(wrappedValue: AppOptionsService())
+        _matchRequestVM         = StateObject(wrappedValue: matchReqVM)
+        _matchingVM             = StateObject(wrappedValue: matchVM)
+        _chatVM                 = StateObject(wrappedValue: ChatViewModel(authVM: authVM))
+        _meetupVM               = StateObject(wrappedValue: MeetupViewModel(authVM: authVM))
+        _reviewVM               = StateObject(wrappedValue: ReviewViewModel(authVM: authVM))
+        _router                 = StateObject(wrappedValue: GlobalRouter())
         
         //    configureFirebaseEmulators()
     }
@@ -44,9 +50,11 @@ struct SoPupApp: App {
                 .environmentObject(authViewModel)
                 .environmentObject(onboardingViewModel)
                 .environmentObject(appOptionsService)
+                .environmentObject(matchingVM)
                 .environmentObject(matchRequestVM)
                 .environmentObject(chatVM)
                 .environmentObject(meetupVM)
+                .environmentObject(reviewVM)
                 .modelContainer(for: DogFilterSettingsModel.self)
                 .task {
                     await authViewModel.checkAuthStatus()

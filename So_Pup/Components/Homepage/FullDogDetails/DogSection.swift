@@ -3,7 +3,7 @@ import SwiftUI
 struct DogSection: View {
     let dog: DogModel
     let owner: UserModel
-    let userCoordinate: Coordinate
+    let userCoordinate: Coordinate?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -16,7 +16,9 @@ struct DogSection: View {
                     HStack(spacing: 6) {
                         Text(owner.location)
                         Spacer()
-                        Text(owner.coordinate.formattedDistance(from: userCoordinate))
+                        if let userCoordinate{
+                            Text(owner.coordinate.formattedDistance(from: userCoordinate))
+                        }
                     }
                     .font(.subheadline)
                     .foregroundColor(.gray)

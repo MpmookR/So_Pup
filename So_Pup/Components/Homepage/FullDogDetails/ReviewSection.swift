@@ -1,80 +1,49 @@
 import SwiftUI
 
 struct ReviewSection: View {
-    let reviews: [Review]
     let dogName: String
-    let ownerId: String  // Add owner ID parameter
-    @StateObject private var reviewVM = ReviewViewModel()
-    
-    private var averageRating: Double {
-        reviewVM.averageRating
-    }
-    
-    private var totalReviews: Int {
-        reviewVM.totalReviews
-    }
-    
+    let owner: UserModel
+
+    @EnvironmentObject var reviewVM: ReviewViewModel
+
+    private var averageRating: Double { reviewVM.averageRating }
+    private var totalReviews: Int { reviewVM.totalReviews }
+    private var enhanced: [Review] { reviewVM.enhancedReviews }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Reviews")
                 .font(.headline)
                 .foregroundColor(Color.socialText)
-            
-            if !reviews.isEmpty {
-                // Review Summary Bar
+
+            // Show summary as soon as stats exist
+            if totalReviews > 0 {
                 HStack {
-                    HStack(spacing: 4) {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
-                            .font(.system(size: 16))
-                        
-                        if reviewVM.isLoading {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        } else {
-                            Text(String(format: "%.1f", averageRating))
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                    }
-                    
+                    Image(systemName: "star.fill").foregroundColor(.yellow)
+                    Text(String(format: "%.1f", averageRating)).font(.headline)
                     Spacer()
-                    
-                    if reviewVM.isLoading {
-                        Text("Loading...")
-                            .font(.body)
-                            .foregroundColor(.gray)
-                    } else {
-                        Text("Total: \(totalReviews) review\(totalReviews == 1 ? "" : "s")")
-                            .font(.body)
-                            .foregroundColor(.gray)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color.yellow.opacity(0.1))
-                .cornerRadius(12)
-                
-                // Individual Review Cards
-                ForEach(reviews) { review in
-                    ReviewCard(review: review)
-                }
-            } else {
-                // Empty State
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("No reviews just yet. Once \(dogName) has a few successful meetups, you'll see what others think!")
+                    Text("Total: \(totalReviews) review\(totalReviews == 1 ? "" : "s")")
                         .font(.body)
                         .foregroundColor(.gray)
-                        .padding(.top, 16)
                 }
+                .padding()
+                .background(Color.socialLight)
+                .cornerRadius(21)
+            }
+
+            if !enhanced.isEmpty {
+                ForEach(enhanced) { ReviewCard(review: $0) }
+            } else if totalReviews == 0 {
+                Text("No reviews just yet. Once \(dogName) has a few successful meetups, you'll see what others think!")
+                    .foregroundColor(.gray)
+                    .padding(.top, 16)
             }
         }
-        .onAppear {
-            Task {
-                await reviewVM.loadReviewStats(userId: ownerId)
-            }
+        .task(id: owner.id) {
+            await reviewVM.loadAllReviewData(userId: owner.id) // loads stats + basic + enhanced
         }
     }
 }
-    
+
+
     

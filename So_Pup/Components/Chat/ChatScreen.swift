@@ -2,36 +2,39 @@ import SwiftUI
 
 struct ChatScreen: View {
     let dog: DogModel
+    let owner: UserModel
     let room: ChatRoom
     let currentUserId: String
+    let viewerCoordinate: Coordinate?
     var onBack: (() -> Void)? = nil
         
     @StateObject private var messageService = FirestoreMessageService()
     @ObservedObject var sendMessage: SendMessageViewModel
-    @StateObject private var meetupVM: MeetupViewModel
+    
+    @EnvironmentObject private var meetupVM: MeetupViewModel
     
     @State private var scrollTarget: String?
     @State private var showCreateMeetup = false
 
-
-    init(dog: DogModel, room: ChatRoom, currentUserId: String, onBack: (() -> Void)? = nil, sendMessage: SendMessageViewModel, authVM: AuthViewModel) {
-        self.dog = dog
-        self.room = room
-        self.currentUserId = currentUserId
-        self.onBack = onBack
-        self.sendMessage = sendMessage
-        self._meetupVM = StateObject(wrappedValue: MeetupViewModel(authVM: authVM))
-    }
-
     var body: some View {
         VStack(spacing: 0) {
-            CustomNavBar(
-                title: "\(dog.displayName)'s Profile",
-                showBack: true,
-                onBackTap: onBack,
-                backgroundColor: .white
-            )
-            
+            HStack{
+                CustomNavBar(
+                    title: "\(dog.displayName)'s Profile",
+                    showBack: true,
+                    onBackTap: onBack,
+                    backgroundColor: .white
+                )
+                ViewProfileButton(
+                    dog: dog,
+                    owner: owner,
+                    viewerCoordinate: viewerCoordinate,
+                    title: nil
+                )
+                    .padding(.trailing, 12)
+                    .padding(.top, 8)
+            }
+
             ScrollView {
                 LazyVStack {
                     ForEach(messageService.messages) { message in
@@ -40,6 +43,7 @@ struct ChatScreen: View {
                             text: message.text,
                             isCurrentUser: message.senderId == currentUserId
                         )
+                        
                     }
                 }
             }
@@ -64,7 +68,6 @@ struct ChatScreen: View {
         .background(.white)
         .sheet(isPresented: $showCreateMeetup) {
             CreateMeetup(
-                meetupVM: meetupVM,
                 onBack: { showCreateMeetup = false },
                 chatRoomId: room.id,
                 receiverId: room.otherUserId(currentUserId: currentUserId) ?? "",

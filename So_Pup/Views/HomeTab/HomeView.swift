@@ -1,16 +1,25 @@
 import SwiftUI
 import SwiftData
+//
+//  Displays the main homepage where users can browse potential dog matches.
+//
+//  - Banner at the top
+//  - Sticky filter bar to open filter sheet
+//  - Match list (with loading and empty states)
+//  - Navigation to full dog profile details
+//  - Filter sheet for refining match results
+//
 
 struct HomeView: View {
-    @State private var showFilterSheet = false
-    @State private var filterSettings = DogFilterSettings()
-    
-    @StateObject private var matchingVM = MatchingViewModel()
-    @State private var selectedProfile: MatchProfile? = nil
+    @State private var showFilterSheet = false                  // controls filter sheet presentation
+    @State private var filterSettings = DogFilterSettings()     // local copy of filter settings
+    @State private var selectedProfile: MatchProfile? = nil     // track selected profile for navigation
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    
     @EnvironmentObject var matchRequestVM: MatchRequestViewModel
+    @EnvironmentObject var matchingVM: MatchingViewModel
     
     var body: some View {
         NavigationStack {
@@ -20,7 +29,7 @@ struct HomeView: View {
                 ScrollView {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                         
-                        // MARK: - Scrollable Banner
+                        // MARK: - Top Banner
                         Image("banner2")
                             .resizable()
                             .scaledToFill()
@@ -34,8 +43,6 @@ struct HomeView: View {
                             header:
                                 ZStack {
                                     Color.white
-                                    //                                        .frame(maxWidth: .infinity)
-                                    
                                     FilterBarView(filterSettings: filterSettings) {
                                         showFilterSheet = true
                                     }
@@ -43,11 +50,22 @@ struct HomeView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .frame(maxWidth: .infinity)
-                                .background(Color.white) // ensure no gaps
-                                .zIndex(1)               // keep header above content
-                        ){
-                            // MARK: - No Matches
-                            if matchingVM.matchedProfiles.isEmpty {
+                                .background(Color.white)
+                                .zIndex(1) // keep header above content
+                        ) {
+                            // MARK: - Match State Handling
+                            
+                            if matchingVM.isLoading {
+                                // Loading spinner while matches are being fetched
+                                VStack(spacing: 12) {
+                                    ProgressView().controlSize(.large)
+                                    Text("Finding matches…")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.top, 56)
+                            }
+                            else if matchingVM.matchedProfiles.isEmpty && matchingVM.hasLoadedOnce {
+                                // Empty state after data has loaded at least once
                                 VStack(alignment: .center) {
                                     Text("No matches found 🐾")
                                         .fontWeight(.bold)
@@ -61,74 +79,79 @@ struct HomeView: View {
                                 }
                                 .padding(.top, 56)
                                 .padding(.horizontal)
-                                
-                            } else if let viewerCoordinate = matchingVM.userCoordinate {
-                                // MARK: - Match List
+                            }
+                            else if let viewerCoordinate = matchingVM.userCoordinate {
+                                // Show match list if profiles exist
                                 ForEach(matchingVM.matchedProfiles, id: \.dog.id) { profile in
-                                    Button(action: {
-                                        selectedProfile = profile
-                                    }) {
+                                    Button { selectedProfile = profile } label: {
                                         ProfileMatchCard(
                                             dog: profile.dog,
                                             owner: profile.owner,
                                             userCoordinate: Coordinate(from: viewerCoordinate)
                                         )
                                     }
-                                    .buttonStyle(PlainButtonStyle())
+                                    .buttonStyle(.plain)
                                     .padding(.horizontal)
                                     .padding(.top, 16)
                                 }
-                            } else {
-                                Text("Fetching your location...")
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 32)
+                            }
+                            else {
+                                // Waiting for user’s location
+                                VStack(spacing: 12) {
+                                    ProgressView().controlSize(.regular)
+                                    Text("Fetching your location…")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.top, 32)
                             }
                         }
                     }
                 }
-                
-                // MARK: - Navigation to FullDogDetailsView
-                .navigationDestination(isPresented: Binding(
-                    get: { selectedProfile != nil },
-                    set: { if !$0 { selectedProfile = nil } }
-                )) {
-                    if let profile = selectedProfile,
-                       let viewerCoordinate = matchingVM.userCoordinate {
-                        FullDogDetailsView(
-                            dog: profile.dog,
-                            owner: profile.owner,
-                            userCoordinate: Coordinate(from: viewerCoordinate),
-                            reviews: [], // TODO: Load actual reviews from Firestore
-                            matchRequestVM: matchRequestVM
-                        )
-                    }
-                }
-                
-                // MARK: - Filter Sheet
-                .sheet(isPresented: $showFilterSheet) {
-                    FilterDetailSheet(
-                        filterSettings: $filterSettings,
-                        onDismiss: {
-                            showFilterSheet = false
-                            filterService.saveFilterSettings(filterSettings)
-                        },
-                        onApply: { scoredDogs in
-                            matchingVM.updateScoredMatches(scoredDogs)
-                        },
-                        currentDog: matchingVM.currentDog,
-                        candidateIds: matchingVM.candidateDogIds,
-                        userCoordinate: matchingVM.userCoordinate.map(Coordinate.init)
+            }
+            // MARK: - Navigation to FullDogDetailsView
+            .navigationDestination(isPresented: Binding(
+                get: { selectedProfile != nil },
+                set: { if !$0 { selectedProfile = nil } }
+            )) {
+                if let profile = selectedProfile,
+                   let viewerCoordinate = matchingVM.userCoordinate {
+                    FullDogDetailsView(
+                        dog: profile.dog,
+                        owner: profile.owner,
+                        userCoordinate: Coordinate(from: viewerCoordinate)
                     )
-                    .background(Color.white)
-                }
-                
-                // MARK: - Load and Initialize Matching Data
-                .task {
-                    let savedFilter = filterService.loadFilterSettings()
-                    filterSettings = savedFilter
-                    await matchingVM.initialize(with: savedFilter)
                 }
             }
+            
+            // MARK: - Filter Sheet
+            .sheet(isPresented: $showFilterSheet) {
+                FilterDetailSheet(
+                    filterSettings: $filterSettings,
+                    onDismiss: {
+                        showFilterSheet = false
+                        filterService.saveFilterSettings(filterSettings)
+                    },
+                    onApply: { scoredDogs in
+                        matchingVM.updateScoredMatches(scoredDogs)
+                    },
+                    currentDog: matchingVM.currentDog,
+                    candidateIds: matchingVM.candidateDogIds,
+                    userCoordinate: matchingVM.userCoordinate.map(Coordinate.init)
+                )
+                .background(Color.white)
+            }
+            
+            // MARK: - Load and Initialize Matching Data
+            .task {
+                let savedFilter = filterService.loadFilterSettings()
+                filterSettings = savedFilter
+                if !matchingVM.hasLoadedOnce || matchingVM.filterSettings != savedFilter {
+                    await matchingVM.initialize(with: savedFilter)
+                }            }
+            
+            // Smooth animation between loading/empty/match states
+            .animation(.easeInOut, value: matchingVM.isLoading)
+            .animation(.easeInOut, value: matchingVM.matchedProfiles.count)
         }
     }
     

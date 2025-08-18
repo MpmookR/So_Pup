@@ -4,6 +4,10 @@ import SwiftUI
 
 @MainActor
 final class ReviewViewModel: ObservableObject {
+    
+    private let reviewService = ReviewService.shared
+    private let authVM: AuthViewModel
+    
     @Published var userReviews: [Review] = []
     @Published var enhancedReviews: [Review] = []
     @Published var reviewStats: ReviewStats?
@@ -13,9 +17,12 @@ final class ReviewViewModel: ObservableObject {
     @Published var successMessage: String?
     @Published var showSuccess = false
     
-    private let reviewService = ReviewService.shared
-    private let authVM = AuthViewModel()
+    @Published private var statsCache: [String: ReviewStats] = [:]
+    @Published private var loadingIds: Set<String> = []
     
+    init(authVM: AuthViewModel) {
+        self.authVM = authVM
+    }
     // MARK: - Public Methods
     
     /// Submit a review for a meetup
@@ -45,8 +52,8 @@ final class ReviewViewModel: ObservableObject {
             
             await showSuccess("Review submitted successfully!")
             
-            // Refresh reviews after submission
-            await loadUserReviews(userId: currentUser.uid)
+            // Refresh the profile you're viewing
+            await loadAllReviewData(userId: revieweeId)
             
         } catch {
             await showError("Failed to submit review: \(error.localizedDescription)")
@@ -62,11 +69,31 @@ final class ReviewViewModel: ObservableObject {
         do {
             let stats = try await reviewService.fetchReviewStats(userId: userId)
             reviewStats = stats
+            print("📊 ReviewViewModel: Received stats - averageRating=\(stats.averageRating), reviewCount=\(stats.reviewCount)")
         } catch {
+            print("❌ ReviewViewModel: Failed to load stats - \(error.localizedDescription)")
             await showError("Failed to load review statistics: \(error.localizedDescription)")
         }
         
         isLoading = false
+    }
+    
+    func stats(for ownerId: String) -> ReviewStats? { statsCache[ownerId] }
+    
+    /// Fetches once per owner and caches in statsCache[ownerId]
+    /// Skips network if already present (unless force == true)
+    /// Tracks loading per owner (no global spinner), so it’s safe for lists/cards
+    // use when multiple owner visible
+    func loadStatsIfNeeded(ownerId: String, force: Bool = false) async {
+        if !force, statsCache[ownerId] != nil || loadingIds.contains(ownerId) { return }
+        loadingIds.insert(ownerId)
+        defer { loadingIds.remove(ownerId) }
+        do {
+            let s = try await reviewService.fetchReviewStats(userId: ownerId)
+            statsCache[ownerId] = s
+        } catch {
+            print("⚠️ stats load failed for \(ownerId):", error.localizedDescription)
+        }
     }
     
     /// Load all reviews for a user
@@ -118,6 +145,7 @@ final class ReviewViewModel: ObservableObject {
         showSuccess = true
     }
     
+    
     /// Get average rating for a user
     var averageRating: Double {
         reviewStats?.averageRating ?? 0.0
@@ -125,12 +153,7 @@ final class ReviewViewModel: ObservableObject {
     
     /// Get total number of reviews for a user
     var totalReviews: Int {
-        reviewStats?.totalReviews ?? 0
-    }
-    
-    /// Get rating distribution for a user
-    var ratingDistribution: [Int: Int] {
-        reviewStats?.ratingDistribution ?? [:]
+        reviewStats?.reviewCount ?? 0
     }
     
     /// Check if user has any reviews
