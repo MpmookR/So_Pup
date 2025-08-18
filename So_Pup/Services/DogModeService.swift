@@ -24,7 +24,7 @@ final class DogModeService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         
-        // Prepare vaccination data using dictionary encoding (following MatchRequestService pattern)
+        // Prepare vaccination data using dictionary encoding 
         var body: [String: Any] = [:]
         
         if let vaccination1Date = coreVaccination1Date {

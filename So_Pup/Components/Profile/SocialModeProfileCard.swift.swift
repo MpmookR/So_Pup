@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - Social Mode Content
 struct SocialModeContent: View {
     let dog: DogModel
+    let profileEditVM: ProfileEditViewModel
     
     var body: some View {
         VStack(spacing: 16) {
@@ -18,7 +19,7 @@ struct SocialModeContent: View {
             }
             
             // Health Status Section
-            HealthStatusSection(dog: dog)
+            HealthStatusSection(profileEditVM: profileEditVM)
                 .padding(.horizontal, 16)
         }
     }
@@ -38,7 +39,10 @@ struct SocialProfileSection: View {
                 
                 Spacer()
                 
-                Button(action: {}) {
+                Button(action: {
+                    // TODO: Implement dog profile editing
+                    print("Edit dog profile tapped")
+                }) {
                     Image(systemName: "pencil")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color.socialText)
@@ -133,7 +137,10 @@ struct BehaviorSection: View {
                 
                 Spacer()
                 
-                Button(action: {}) {
+                Button(action: {
+                    // TODO: Implement behavior editing
+                    print("Edit behavior tapped")
+                }) {
                     Image(systemName: "pencil")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color.socialText)
@@ -189,32 +196,6 @@ struct BehaviorTagSection: View {
     }
 }
 
-#Preview {
-    SocialModeContent(
-        dog: DogModel(
-            ownerId: "user1",
-            name: "Kuma",
-            gender: .male,
-            size: .medium,
-            weight: 13.0,
-            breed: "Shiba Inu",
-            dob: Calendar.current.date(byAdding: .year, value: -4, to: Date()) ?? Date(),
-            behavior: DogBehavior(
-                playStyles: ["Chaser", "Explorer", "Mouthy"],
-                preferredPlayEnvironments: ["Open Fields", "Home/Garden"],
-                triggersAndSensitivities: ["Sudden movements", "Bird", "Heat"]
-            ),
-            healthStatus: HealthStatus(
-                fleaTreatmentDate: Calendar.current.date(byAdding: .day, value: -30, to: Date()),
-                wormingTreatmentDate: Calendar.current.date(byAdding: .day, value: -60, to: Date())
-            ),
-            mode: .social,
-            status: .ready,
-            imageURLs: [],
-            coordinate: Coordinate(latitude: 51.5074, longitude: -0.1278)
-        )
-    )
-    .padding()
-}
+
 
 

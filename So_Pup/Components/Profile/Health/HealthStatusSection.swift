@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Health Status Section
 struct HealthStatusSection: View {
-    let dog: DogModel
+    @ObservedObject var profileEditVM: ProfileEditViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -12,15 +12,15 @@ struct HealthStatusSection: View {
                     .fontWeight(.semibold)
                     .foregroundColor(Color.socialText)
                 
-                Text(dog.healthVerificationStatus.rawValue.capitalized)
+                Text(profileEditVM.dog.healthVerificationStatus.rawValue.capitalized)
                     .font(.subheadline)
-                    .foregroundColor(dog.healthVerificationStatus == .verified ? .green : .red)
+                    .foregroundColor(profileEditVM.dog.healthVerificationStatus == .verified ? .green : .red)
                 
                 Spacer()
                 
-                Image(systemName: dog.healthVerificationStatus == .verified ? "checkmark.circle.fill" : "exclamationmark.triangle")
+                Image(systemName: profileEditVM.dog.healthVerificationStatus == .verified ? "checkmark.circle.fill" : "exclamationmark.triangle")
                     .font(.title3)
-                    .foregroundColor(dog.healthVerificationStatus == .verified ? .green : .red)
+                    .foregroundColor(profileEditVM.dog.healthVerificationStatus == .verified ? .green : .red)
             }
             
             HStack(spacing: 16) {
@@ -34,21 +34,49 @@ struct HealthStatusSection: View {
                 VStack(spacing: 12) {
                     HealthDatePicker(
                         title: "Flea Treatment",
-                        subtitle: reminderText(for: dog.healthStatus?.fleaTreatmentDate, reminderDays: 2),
-                        date: dog.healthStatus?.fleaTreatmentDate
+                        subtitle: reminderText(for: profileEditVM.dog.healthStatus?.fleaTreatmentDate, reminderDays: 2),
+                        date: profileEditVM.dog.healthStatus?.fleaTreatmentDate,
+                        onDateSelected: { selectedDate in
+                            Task {
+                                await profileEditVM.updateFleaTreatmentDate(selectedDate)
+                            }
+                        }
                     )
+                    .disabled(profileEditVM.isUpdating)
                     
                     HealthDatePicker(
                         title: "Worming Treatment",
-                        subtitle: reminderText(for: dog.healthStatus?.wormingTreatmentDate, reminderDays: 81),
-                        date: dog.healthStatus?.wormingTreatmentDate
+                        subtitle: reminderText(for: profileEditVM.dog.healthStatus?.wormingTreatmentDate, reminderDays: 81),
+                        date: profileEditVM.dog.healthStatus?.wormingTreatmentDate,
+                        onDateSelected: { selectedDate in
+                            Task {
+                                await profileEditVM.updateWormingTreatmentDate(selectedDate)
+                            }
+                        }
                     )
+                    .disabled(profileEditVM.isUpdating)
                 }
+            }
+            
+            if profileEditVM.isUpdating {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Updating health status...")
+                        .font(.caption)
+                        .foregroundColor(Color.socialText)
+                }
+                .padding(.top, 4)
             }
         }
         .padding(16)
         .background(Color.socialLight)
         .cornerRadius(16)
+        .alert("Health Update Error", isPresented: $profileEditVM.showErrorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(profileEditVM.errorMessage)
+        }
     }
     
     private func reminderText(for date: Date?, reminderDays: Int) -> String {

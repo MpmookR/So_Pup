@@ -5,6 +5,7 @@ struct HealthDatePicker: View {
     let title: String
     let subtitle: String
     let date: Date?
+    let onDateSelected: (Date) -> Void
     
     @State private var showDatePicker = false
     @State private var selectedDate = Date()
@@ -76,7 +77,7 @@ struct HealthDatePicker: View {
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Save") {
-                            // TODO: Implement save logic
+                            onDateSelected(selectedDate)
                             showDatePicker = false
                         }
                         .fontWeight(.semibold)
