@@ -1,57 +1,80 @@
 import SwiftUI
 
 struct ReviewSection: View {
-    let review: DogReview
-
+    let reviews: [Review]
+    let dogName: String
+    let ownerId: String  // Add owner ID parameter
+    @StateObject private var reviewVM = ReviewViewModel()
+    
+    private var averageRating: Double {
+        reviewVM.averageRating
+    }
+    
+    private var totalReviews: Int {
+        reviewVM.totalReviews
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Reviewer Info
-            HStack(alignment: .center, spacing: 12) {
-                AsyncImage(url: URL(string: review.reviewerDogImageURL)) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    default:
-                        Image(systemName: "pawprint.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .foregroundColor(.gray.opacity(0.4))
-                            .padding(10)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Reviews")
+                .font(.headline)
+                .foregroundColor(Color.socialText)
+            
+            if !reviews.isEmpty {
+                // Review Summary Bar
+                HStack {
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                            .font(.system(size: 16))
+                        
+                        if reviewVM.isLoading {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Text(String(format: "%.1f", averageRating))
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    if reviewVM.isLoading {
+                        Text("Loading...")
+                            .font(.body)
+                            .foregroundColor(.gray)
+                    } else {
+                        Text("Total: \(totalReviews) review\(totalReviews == 1 ? "" : "s")")
+                            .font(.body)
+                            .foregroundColor(.gray)
                     }
                 }
-                .frame(width: 50, height: 50)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(99)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(review.reviewerDogName)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    Text(review.date.formattedLong())
-                        .font(.caption)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.yellow.opacity(0.1))
+                .cornerRadius(12)
+                
+                // Individual Review Cards
+                ForEach(reviews) { review in
+                    ReviewCard(review: review)
+                }
+            } else {
+                // Empty State
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("No reviews just yet. Once \(dogName) has a few successful meetups, you'll see what others think!")
+                        .font(.body)
                         .foregroundColor(.gray)
+                        .padding(.top, 16)
                 }
             }
-
-            // Review Text
-            Text(review.reviewText)
-                .font(.body)
-                .foregroundColor(Color.socialText)
-                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity) 
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 21))
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .onAppear {
+            Task {
+                await reviewVM.loadReviewStats(userId: ownerId)
+            }
+        }
     }
 }
-
-#Preview {
-    ReviewSection(review: MockDogReviewData.review2)
-        .padding()
-        .background(Color(.systemGroupedBackground))
-}
+    
+    

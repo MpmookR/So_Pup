@@ -11,6 +11,10 @@ struct MeetupSummaryDTO: Identifiable, Codable, Hashable {
     let otherDogId: String
     let otherDogName: String
     let otherDogImageUrl: String
+    let direction: MeetupDirection  
 }
 
-
+enum MeetupDirection: String, Codable {
+    case incoming
+    case outgoing
+}

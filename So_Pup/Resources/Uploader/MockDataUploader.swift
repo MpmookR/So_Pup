@@ -30,15 +30,15 @@ struct MockDataUploader{
         }
         
         // Upload reviews
-        for review in MockDogReviewData.all {
-            let reviewRef = db.collection("dogReviews").document(review.id)
-            do {
-                try await reviewRef.setData(from: review)
-                print("✅ Uploaded review by: \(review.reviewerDogName) for dogId: \(review.reviewedDogId)")
-            } catch {
-                print("❌ Failed to upload review \(review.id), \(error.localizedDescription)")
-            }
-        }
+//        for review in MockDogReviewData.all {
+//            let reviewRef = db.collection("dogReviews").document(review.id)
+//            do {
+//                try await reviewRef.setData(from: review)
+//                print("✅ Uploaded review by: \(review.reviewerDogName) for dogId: \(review.reviewedDogId)")
+//            } catch {
+//                print("❌ Failed to upload review \(review.id), \(error.localizedDescription)")
+//            }
+//        }
     }
 }
 

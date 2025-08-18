@@ -52,29 +52,47 @@ struct MeetupCard: View {
                 Group {
                     switch meetup.status {
                     case .pending:
-                        HStack(spacing: 12) {
-                            MeetupActionButton(actionType: .accept, isEnabled: !meetupVM.isLoading) {
-                                Task {
-                                    await meetupVM.acceptMeetup(
-                                        chatRoomId: meetup.chatRoomId,
-                                        meetupId: meetup.id,
-                                        receiverId: meetup.otherUserId
-                                    )
+                        if meetup.direction == .incoming {
+                            // I received this request → can respond
+                            HStack(spacing: 12) {
+                                MeetupActionButton(actionType: .accept, isEnabled: !meetupVM.isLoading) {
+                                    Task {
+                                        await meetupVM.acceptMeetup(
+                                            chatRoomId: meetup.chatRoomId,
+                                            meetupId: meetup.id,
+                                            receiverId: meetup.otherUserId
+                                        )
+                                    }
+                                }
+                                MeetupActionButton(actionType: .decline, isEnabled: !meetupVM.isLoading) {
+                                    Task {
+                                        await meetupVM.rejectMeetup(
+                                            chatRoomId: meetup.chatRoomId,
+                                            meetupId: meetup.id,
+                                            receiverId: meetup.otherUserId
+                                        )
+                                    }
                                 }
                             }
-                            MeetupActionButton(actionType: .decline, isEnabled: !meetupVM.isLoading) {
-                                Task {
-                                    await meetupVM.rejectMeetup(
-                                        chatRoomId: meetup.chatRoomId,
-                                        meetupId: meetup.id,
-                                        receiverId: meetup.otherUserId
-                                    )
-                                }
+                        } else {
+                            // I sent this request → show pending state
+                            VStack(spacing: 12) {
+
+                                SubmitButton(
+                                    title: "Pending — waiting for response",
+                                    iconName: "clock",
+                                    backgroundColor: Color.socialAccent,
+                                    foregroundColor: Color.socialText,
+                                    borderColor: nil,
+                                    action: {} // or nil
+                                )
+                                .disabled(true)
+
                             }
                         }
                         
                     case .accepted:
-                        VStack(spacing: 10) {
+                        VStack(spacing: 12) {
                             MeetupActionButton(actionType: .cancel, isEnabled: !meetupVM.isLoading) {
                                 Task {
                                     await meetupVM.cancelMeetup(
@@ -102,6 +120,7 @@ struct MeetupCard: View {
                 // Review button if allowed
                 if meetup.status.allowsComment {
                     MeetupActionButton(actionType: .review) {
+                        //MARK: need to implement review feature
                         // TODO: navigate to review flow with meetup.id
                     }
                 }
@@ -181,7 +200,8 @@ struct MeetupCard: View {
                 otherUserName: "John",
                 otherDogId: "dog2",
                 otherDogName: "Buddy",
-                otherDogImageUrl: ""
+                otherDogImageUrl: "",
+                direction: .outgoing
             ),
             onAction: { _ in }
         )
@@ -196,7 +216,8 @@ struct MeetupCard: View {
                 otherUserName: "Sam",
                 otherDogId: "dog9",
                 otherDogName: "Milo",
-                otherDogImageUrl: ""
+                otherDogImageUrl: "",
+                direction: .incoming
             ),
             onAction: { _ in }
         )

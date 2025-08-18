@@ -5,7 +5,7 @@ struct FullDogDetailsView: View {
     let dog: DogModel
     let owner: UserModel
     let userCoordinate: Coordinate
-    let reviews: [DogReview]
+    let reviews: [Review]
     
     @ObservedObject var matchRequestVM: MatchRequestViewModel // share ref
     var onBack: (() -> Void)? = nil
@@ -32,32 +32,11 @@ struct FullDogDetailsView: View {
                         
                         Divider()
                         
-                        if !reviews.isEmpty {
-                            VStack(alignment: .leading, spacing: 16) {
-                                Text("Reviews")
-                                    .font(.headline)
-                                    .foregroundColor(Color.socialText)
-                                
-                                ForEach(reviews) { review in
-                                    ReviewSection(review: review)
-                                }
-                            }
-                        } else {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Reviews")
-                                    .font(.headline)
-                                    .foregroundColor(Color.socialText)
-                                
-                                Text("No reviews just yet. Once \(dog.displayName) has a few successful meetups, you’ll see what others think!")
-                                    .font(.body)
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 16)
-                            }
-                        }
+                        ReviewSection(reviews: reviews, dogName: dog.displayName, ownerId: owner.id)
                     }
-                    
                 }
                 .padding(.horizontal)
+                .padding(.bottom, 24)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .navigationBarBackButtonHidden(true)
                 
@@ -85,7 +64,7 @@ struct FullDogDetailsView: View {
                                         toDogId: dog.id,
                                         message: message
                                     )
-                                    // ✅ Refresh match requests after sending
+                                    // Refresh match requests after sending
                                     await matchRequestVM.fetchMatchRequests()
 
                                 } else {

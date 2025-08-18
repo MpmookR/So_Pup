@@ -136,7 +136,10 @@ struct CreateMeetup: View {
             }
             .padding(.top)
             .padding(.horizontal)
+            
         }
+        .onTapGesture { hideKeyboard() }
+
         .alert("Error", isPresented: $meetupVM.showError) {
             Button("OK") { }
         } message: {
