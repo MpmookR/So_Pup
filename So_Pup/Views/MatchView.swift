@@ -86,7 +86,7 @@ struct MatchView: View {
                 MatchCard(
                     dog: card.dog,
                     owner: card.owner,
-                    viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init), // ✅ viewer location
+                    viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init),
                     message: card.message,
                     direction: card.direction
                 )
@@ -101,7 +101,7 @@ struct MatchView: View {
         MatchCard(
             dog: card.dog,
             owner: card.owner,
-            viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init), // ✅ viewer location
+            viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init), 
             message: card.message,
             direction: card.direction,
             onAccept: { handleStatusUpdate(requestId: card.requestId, status: .accepted) },

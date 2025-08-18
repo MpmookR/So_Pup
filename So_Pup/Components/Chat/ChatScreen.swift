@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ChatScreen: View {
-    let dog: DogModel
+    let dog: DogModel // other's dog
     let owner: UserModel
     let room: ChatRoom
     let currentUserId: String
@@ -12,6 +12,7 @@ struct ChatScreen: View {
     @ObservedObject var sendMessage: SendMessageViewModel
     
     @EnvironmentObject private var meetupVM: MeetupViewModel
+    @EnvironmentObject private var matchingVM: MatchingViewModel
     
     @State private var scrollTarget: String?
     @State private var showCreateMeetup = false
@@ -82,7 +83,6 @@ struct ChatScreen: View {
         .navigationBarHidden(true)
         // configure the SendMessage VM when the screen opens / room changes
                 .task(id: room.id) {
-                    // myDogId = the room dog that is NOT the other dog's id
                     let myDogId = room.dogIds.first { $0 != dog.id } ?? ""
                     let ok = sendMessage.setContext(
                         room: room,
@@ -92,13 +92,14 @@ struct ChatScreen: View {
                     print("🧭 setContext ok=\(ok) room=\(room.id) myDogId=\(myDogId)")
                 }
     }
-        // Check if meetups are allowed (both dogs must be in social mode)
-    private var isMeetupAllowed: Bool {
-        return dog.mode == .social
-    }
-    
-    // Check if meetups are available (both dogs must be in social mode)
+    // MARK: - Meetup gating
+
+    // Allowed only if BOTH dogs are in Social mode.
     private var canCreateMeetup: Bool {
-        return dog.mode == .social
+        guard let myDog = matchingVM.currentDog else {
+            // While loading your dog, be safe and disallow
+            return false
+        }
+        return (myDog.mode == .social) && (dog.mode == .social)
     }
 }

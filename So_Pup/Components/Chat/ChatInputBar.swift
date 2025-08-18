@@ -4,7 +4,7 @@ struct ChatInputBar: View {
     @Binding var text: String
     var onSend: (String) -> Void
     var onCreateMeetup: () -> Void
-    var isMeetupAllowed: Bool = true
+    var isMeetupAllowed: Bool
     @FocusState private var isFocused: Bool
     @State private var showPuppyModeAlert = false
     
