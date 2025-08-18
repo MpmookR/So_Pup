@@ -1,17 +1,17 @@
 import SwiftUI
 
 struct SocialModeDataInputSheet: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var dogModeSwitcher: DogModeSwitcherViewModel
-    
+
     // Behavior data
     @State private var selectedPlayStyles: Set<String> = []
     @State private var selectedPlayEnvironments: Set<String> = []
     @State private var selectedTriggerSensitivities: Set<String> = []
-    
+
     // Neutered status
     @State private var isNeutered: Bool? = nil
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -19,54 +19,48 @@ struct SocialModeDataInputSheet: View {
                     // Header
                     VStack(spacing: 8) {
                         Text("🎾 Complete your social profile")
-                            .font(.title2)
-                            .fontWeight(.bold)
+                            .font(.title2).fontWeight(.bold)
                             .foregroundColor(Color.socialText)
                             .multilineTextAlignment(.center)
-                        
                         Text("Help us find the perfect playmates for your pup!")
                             .font(.subheadline)
                             .foregroundColor(Color.socialText.opacity(0.7))
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, 16)
-                    
-                    // Neutered Status Section
+
+                    // Neutered Status
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Neutered Status")
                             .font(.headline)
                             .foregroundColor(Color.socialText)
-                        
+
                         HStack(spacing: 16) {
-                            Button(action: { isNeutered = true }) {
+                            Button { isNeutered = true } label: {
                                 HStack {
                                     Image(systemName: isNeutered == true ? "checkmark.circle.fill" : "circle")
-                                        .foregroundColor(isNeutered == true ? Color.socialAccent : Color.gray)
-                                    Text("Yes, neutered")
-                                        .foregroundColor(Color.socialText)
+                                        .foregroundColor(isNeutered == true ? Color.socialAccent : .gray)
+                                    Text("Yes, neutered").foregroundColor(Color.socialText)
                                 }
                             }
-                            
-                            Button(action: { isNeutered = false }) {
+                            Button { isNeutered = false } label: {
                                 HStack {
                                     Image(systemName: isNeutered == false ? "checkmark.circle.fill" : "circle")
-                                        .foregroundColor(isNeutered == false ? Color.socialAccent : Color.gray)
-                                    Text("Not neutered")
-                                        .foregroundColor(Color.socialText)
+                                        .foregroundColor(isNeutered == false ? Color.socialAccent : .gray)
+                                    Text("Not neutered").foregroundColor(Color.socialText)
                                 }
                             }
                         }
                     }
-                    
+
                     Divider()
-                    
-                    // Behavior Section
+
+                    // Behavior
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Behavior Profile")
                             .font(.headline)
                             .foregroundColor(Color.socialText)
-                        
-                        // Play Styles
+
                         BehaviourSelection(
                             title: "Play Style",
                             options: playStyleOptions,
@@ -75,8 +69,7 @@ struct SocialModeDataInputSheet: View {
                             showToggle: false,
                             allowCustomTags: true
                         )
-                        
-                        // Play Environments
+
                         BehaviourSelection(
                             title: "Preferred Play Environment",
                             options: playEnvironmentOptions,
@@ -85,8 +78,7 @@ struct SocialModeDataInputSheet: View {
                             showToggle: false,
                             allowCustomTags: true
                         )
-                        
-                        // Triggers & Sensitivities
+
                         BehaviourSelection(
                             title: "Triggers & Sensitivities",
                             options: triggerSensitivityOptions,
@@ -96,78 +88,61 @@ struct SocialModeDataInputSheet: View {
                             allowCustomTags: true
                         )
                     }
-                    
-                    Spacer(minLength: 100)
+
+                    Spacer(minLength: 120) // leave room above the bottom button
                 }
                 .padding(.horizontal, 16)
             }
             .navigationTitle("Social Profile")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    .foregroundColor(Color.socialText)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        saveSocialData()
-                    }
-                    .foregroundColor(Color.socialText)
-                    .fontWeight(.semibold)
-                    .disabled(!isFormValid)
-                }
+        }
+        // Pin the SubmitButton above the home indicator
+        .safeAreaInset(edge: .bottom) {
+            SubmitButton(
+                title: dogModeSwitcher.isUpdating ? "Saving…" : "Save",
+                iconName: nil,
+                backgroundColor: (isFormValid && !dogModeSwitcher.isUpdating) ? Color.socialAccent : Color.gray.opacity(0.3),
+                foregroundColor: (isFormValid && !dogModeSwitcher.isUpdating) ? .black : .gray
+            ) {
+                Task { await saveAndClose() }
             }
+            .disabled(!isFormValid || dogModeSwitcher.isUpdating)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
         }
+        .onAppear { loadExistingData() }
+    }
 
-        .onAppear {
-            loadExistingData()
-        }
-    }
-    
-    private var isFormValid: Bool {
-        // At least neutered status should be selected
-        isNeutered != nil
-    }
-    
+    // Must select neutered status at minimum
+    private var isFormValid: Bool { isNeutered != nil }
+
     private func loadExistingData() {
         let dog = dogModeSwitcher.dog
-        
-        // Load existing neutered status
         isNeutered = dog.isNeutered
-        
-        // Load existing behavior
         if let behavior = dog.behavior {
             selectedPlayStyles = Set(behavior.playStyles)
             selectedPlayEnvironments = Set(behavior.preferredPlayEnvironments)
             selectedTriggerSensitivities = Set(behavior.triggersAndSensitivities)
         }
     }
-    
-    private func saveSocialData() {
-        Task {
-            // Prepare behavior data (only if selections made)
-            var behavior: DogBehavior? = nil
-            if !selectedPlayStyles.isEmpty || !selectedPlayEnvironments.isEmpty || !selectedTriggerSensitivities.isEmpty {
-                behavior = DogBehavior(
-                    playStyles: Array(selectedPlayStyles),
-                    preferredPlayEnvironments: Array(selectedPlayEnvironments),
-                    triggersAndSensitivities: Array(selectedTriggerSensitivities)
-                )
-            }
-            
-            // Update social data (neutered status and behavior)
-            await dogModeSwitcher.updateSocialData(
-                isNeutered: isNeutered,
-                behavior: behavior
+
+    private func saveAndClose() async {
+        // Build behavior only if the user selected something
+        var behavior: DogBehavior? = nil
+        if !selectedPlayStyles.isEmpty || !selectedPlayEnvironments.isEmpty || !selectedTriggerSensitivities.isEmpty {
+            behavior = DogBehavior(
+                playStyles: Array(selectedPlayStyles),
+                preferredPlayEnvironments: Array(selectedPlayEnvironments),
+                triggersAndSensitivities: Array(selectedTriggerSensitivities)
             )
-            
-            await MainActor.run {
-                presentationMode.wrappedValue.dismiss()
-            }
         }
+
+        await dogModeSwitcher.updateSocialData(
+            isNeutered: isNeutered,
+            behavior: behavior
+        )
+
+        // Pop/dismiss back to ProfileView (works for both sheet and push)
+        await MainActor.run { dismiss() }
     }
 }
-

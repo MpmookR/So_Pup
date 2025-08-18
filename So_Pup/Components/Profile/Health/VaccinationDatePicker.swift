@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - Vaccination Row
-struct VaccinationRow: View {
+struct VaccinationDatePicker: View {
     let title: String
     let date: Date?
     let isCompleted: Bool

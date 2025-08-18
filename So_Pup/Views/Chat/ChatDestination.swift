@@ -25,7 +25,6 @@ struct ChatDestination: View {
             owner: card.owner,
             room: card.room,
             currentUserId: uid,
-//            viewerCoordinate: card.owner.coordinate,
             onBack: onBack,
             sendMessage: sendVM
         )

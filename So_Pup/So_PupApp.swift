@@ -21,6 +21,7 @@ struct SoPupApp: App {
     @StateObject private var meetupVM: MeetupViewModel
     @StateObject private var reviewVM: ReviewViewModel
     @StateObject private var router: GlobalRouter
+    @StateObject private var reloadBus = AppReloadBus()
     
     init() {
         FirebaseApp.configure()
@@ -55,11 +56,21 @@ struct SoPupApp: App {
                 .environmentObject(chatVM)
                 .environmentObject(meetupVM)
                 .environmentObject(reviewVM)
+                .environmentObject(reloadBus)
                 .modelContainer(for: DogFilterSettingsModel.self)
                 .task {
                     await authViewModel.checkAuthStatus()
                     await appOptionsService.fetchOptions()
                     await matchRequestVM.loadCurrentDogId()
+                }
+            // central place to re-fetch when a reload is requested
+                .onReceive(reloadBus.$tick) { _ in
+                    Task {
+                        // Kick the key VMs so UI updates everywhere
+                        await matchingVM.load()
+                        await matchRequestVM.fetchMatchRequests()
+                        await meetupVM.loadUserMeetups()
+                    }
                 }
         }
     }

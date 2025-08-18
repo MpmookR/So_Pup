@@ -34,7 +34,7 @@ struct CoreVaccinationSection: View {
                     .background(Circle().fill(Color.socialLight))
                 
                 VStack(spacing: 12) {
-                    VaccinationRow(
+                    VaccinationDatePicker(
                         title: "First Vaccination",
                         date: dogModeSwitcher.dog.coreVaccination1Date,
                         isCompleted: dogModeSwitcher.dog.coreVaccination1Date != nil,
@@ -46,7 +46,7 @@ struct CoreVaccinationSection: View {
                     )
                     .disabled(dogModeSwitcher.isUpdating)
                     
-                    VaccinationRow(
+                    VaccinationDatePicker(
                         title: "Second Vaccination",
                         date: dogModeSwitcher.dog.coreVaccination2Date,
                         isCompleted: dogModeSwitcher.dog.coreVaccination2Date != nil,

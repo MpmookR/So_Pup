@@ -4,55 +4,64 @@ import FirebaseAuth
 // MARK: - User Profile Edition Service
 // Handles API requests for updating user and dog profiles
 // Aligns with the backend /profile controller endpoints
-class UserProfileEditionService {
+final class UserProfileEditionService {
     static let shared = UserProfileEditionService()
     private let baseURL = "https://api-2z4snw37ba-uc.a.run.app/profile"
-    
     private init() {}
-    
+
+    // Shared formatters
+    private static let iso: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
     // MARK: - User Profile Updates
-    
+
     /// Update user profile (name, bio, location, etc.)
     /// Endpoint: PUT /profile/user/:userId
+    // Replace your existing updateUserProfile(...) with this version
     func updateUserProfile(
         userId: String,
         name: String? = nil,
         bio: String? = nil,
         location: String? = nil,
         coordinate: Coordinate? = nil,
-        language: String? = nil,
+        languages: [String]? = nil,     
+        customLanguage: String? = nil,
         imageURL: String? = nil
     ) async throws -> UserModel {
         guard let user = Auth.auth().currentUser else {
             throw ProfileEditionError.notAuthenticated
         }
-        
+
         let token = try await user.getIDToken()
         let url = URL(string: "\(baseURL)/user/\(userId)")!
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Prepare request body
+
+        // Declare requestBody, then fill it
         var requestBody: [String: Any] = [:]
         if let name = name { requestBody["name"] = name }
         if let bio = bio { requestBody["bio"] = bio }
         if let location = location { requestBody["location"] = location }
-        if let coordinate = coordinate { requestBody["coordinate"] = coordinate }
-        if let language = language { requestBody["language"] = language }
+        if let coordinate = coordinate { requestBody["coordinate"] = coordinate.asJSON }
+        if let languages = languages { requestBody["languages"] = languages }
+        if let customLanguage = customLanguage { requestBody["customLanguage"] = customLanguage }
         if let imageURL = imageURL { requestBody["imageURL"] = imageURL }
-        
+
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        
+
         let (data, response) = try await URLSession.shared.data(for: request)
-        
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ProfileEditionError.invalidResponse
         }
-        
-        if httpResponse.statusCode == 200 {
+
+        if (200..<300).contains(httpResponse.statusCode) {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let response = try decoder.decode(UserProfileUpdateResponse.self, from: data)
@@ -62,9 +71,10 @@ class UserProfileEditionService {
             throw ProfileEditionError.apiError(errorResponse?.error ?? "Unknown error")
         }
     }
-    
+
+
     // MARK: - Dog Profile Updates
-    
+
     /// Update dog basic profile (name, dob, breed, weight, etc.)
     /// Endpoint: PUT /profile/dog/:dogId/basic
     func updateDogBasicProfile(
@@ -78,228 +88,125 @@ class UserProfileEditionService {
         bio: String? = nil,
         coordinate: Coordinate? = nil
     ) async throws -> DogModel {
-        guard let user = Auth.auth().currentUser else {
-            throw ProfileEditionError.notAuthenticated
-        }
-        
-        let token = try await user.getIDToken()
-        let url = URL(string: "\(baseURL)/dog/\(dogId)/basic")!
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Prepare request body
-        var requestBody: [String: Any] = [:]
-        if let name = name { requestBody["name"] = name }
-        if let dob = dob { requestBody["dob"] = ISO8601DateFormatter().string(from: dob) }
-        if let breed = breed { requestBody["breed"] = breed }
-        if let weight = weight { requestBody["weight"] = weight }
-        if let gender = gender { requestBody["gender"] = gender.rawValue }
-        if let size = size { requestBody["size"] = size.rawValue }
-        if let bio = bio { requestBody["bio"] = bio }
-        if let coordinate = coordinate { requestBody["coordinate"] = coordinate }
-        
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProfileEditionError.invalidResponse
-        }
-        
-        if httpResponse.statusCode == 200 {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let response = try decoder.decode(DogProfileUpdateResponse.self, from: data)
-            return response.dog
-        } else {
-            let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data)
-            throw ProfileEditionError.apiError(errorResponse?.error ?? "Unknown error")
-        }
+        var body: [String: Any] = [:]
+        if let name { body["name"] = name }
+        if let dob { body["dob"] = Self.iso.string(from: dob) }
+        if let breed { body["breed"] = breed }
+        if let weight { body["weight"] = weight }
+        if let gender { body["gender"] = gender.rawValue }
+        if let size { body["size"] = size.rawValue }
+        if let bio { body["bio"] = bio }
+        if let coordinate { body["coordinate"] = coordinate.asJSON } 
+
+        let data = try await send(
+            path: "/dog/\(dogId)/basic",
+            method: "PUT",
+            jsonBody: body
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(DogProfileUpdateResponse.self, from: data).dog
     }
-    
+
     /// Update dog behavior profile (behavior, neutered status only)
     /// Endpoint: PUT /profile/dog/:dogId/behavior
-    /// Note: For health status updates, use updateFleaTreatmentDate() or updateWormingTreatmentDate()
     func updateDogBehaviorProfile(
         dogId: String,
         isNeutered: Bool? = nil,
         behavior: DogBehavior? = nil
     ) async throws -> DogModel {
-        guard let user = Auth.auth().currentUser else {
-            throw ProfileEditionError.notAuthenticated
-        }
-        
-        let token = try await user.getIDToken()
-        let url = URL(string: "\(baseURL)/dog/\(dogId)/behavior")!
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Prepare request body
-        var requestBody: [String: Any] = [:]
-        
-        if let isNeutered = isNeutered {
-            requestBody["isNeutered"] = isNeutered
-        }
-        
-        if let behavior = behavior {
-            // Convert behavior to dictionary (same as DogModeService)
-            let encoder = JSONEncoder()
-            let behaviorData = try encoder.encode(behavior)
-            if let behaviorDict = try JSONSerialization.jsonObject(with: behaviorData) as? [String: Any] {
-                requestBody["behavior"] = behaviorDict
+        var body: [String: Any] = [:]
+        if let isNeutered { body["isNeutered"] = isNeutered }
+        if let behavior {
+            let enc = JSONEncoder()
+            enc.dateEncodingStrategy = .iso8601
+            let behaviorData = try enc.encode(behavior)
+            if let dict = try JSONSerialization.jsonObject(with: behaviorData) as? [String: Any] {
+                body["behavior"] = dict
             }
         }
-        
-        // Encode the body as JSON
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        print("📦 Behavior Profile Update Request:", requestBody)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProfileEditionError.invalidResponse
-        }
-        
-        if httpResponse.statusCode == 200 {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let response = try decoder.decode(DogBehaviorUpdateResponse.self, from: data)
-            return response.dog
-        } else {
-            let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data)
-            throw ProfileEditionError.apiError(errorResponse?.error ?? "Unknown error")
-        }
+
+        let data = try await send(
+            path: "/dog/\(dogId)/behavior",
+            method: "PUT",
+            jsonBody: body
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(DogBehaviorUpdateResponse.self, from: data).dog
     }
-    
+
     /// Update dog images
     /// Endpoint: PUT /profile/dog/:dogId/images
-    func updateDogImages(
-        dogId: String,
-        imageURLs: [String]
-    ) async throws -> DogModel {
-        guard let user = Auth.auth().currentUser else {
-            throw ProfileEditionError.notAuthenticated
-        }
-        
-        let token = try await user.getIDToken()
-        let url = URL(string: "\(baseURL)/dog/\(dogId)/images")!
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let requestBody: [String: Any] = [
-            "imageURLs": imageURLs
-        ]
-        
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProfileEditionError.invalidResponse
-        }
-        
-        if httpResponse.statusCode == 200 {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let response = try decoder.decode(DogImagesUpdateResponse.self, from: data)
-            return response.dog
-        } else {
-            let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data)
-            throw ProfileEditionError.apiError(errorResponse?.error ?? "Unknown error")
-        }
+    func updateDogImages(dogId: String, imageURLs: [String]) async throws -> DogModel {
+        let data = try await send(
+            path: "/dog/\(dogId)/images",
+            method: "PUT",
+            jsonBody: ["imageURLs": imageURLs]
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(DogImagesUpdateResponse.self, from: data).dog
     }
-    
-    // MARK: - Convenience Methods for Health Status
-    
-    /// Update flea treatment date only
+
+    // MARK: - Convenience Health Methods
+
     func updateFleaTreatmentDate(dogId: String, date: Date) async throws -> DogModel {
-        guard let user = Auth.auth().currentUser else {
-            throw ProfileEditionError.notAuthenticated
-        }
-        
-        let token = try await user.getIDToken()
-        let url = URL(string: "\(baseURL)/dog/\(dogId)/behavior")!
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Send only the specific field we're updating (following DogModeService pattern)
-        let requestBody: [String: Any] = [
-            "fleaTreatmentDate": ISO8601DateFormatter().string(from: date)
-        ]
-        
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        print("📦 Flea Treatment Update Request:", requestBody)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProfileEditionError.invalidResponse
-        }
-        
-        if httpResponse.statusCode == 200 {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let response = try decoder.decode(DogBehaviorUpdateResponse.self, from: data)
-            return response.dog
-        } else {
-            let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data)
-            throw ProfileEditionError.apiError(errorResponse?.error ?? "Unknown error")
-        }
+        let data = try await send(
+            path: "/dog/\(dogId)/behavior",
+            method: "PUT",
+            jsonBody: ["fleaTreatmentDate": Self.iso.string(from: date)]
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(DogBehaviorUpdateResponse.self, from: data).dog
     }
-    
-    /// Update worming treatment date only
+
     func updateWormingTreatmentDate(dogId: String, date: Date) async throws -> DogModel {
-        guard let user = Auth.auth().currentUser else {
-            throw ProfileEditionError.notAuthenticated
-        }
-        
+        let data = try await send(
+            path: "/dog/\(dogId)/behavior",
+            method: "PUT",
+            jsonBody: ["wormingTreatmentDate": Self.iso.string(from: date)]
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(DogBehaviorUpdateResponse.self, from: data).dog
+    }
+
+    // MARK: - Core request helper
+
+    private func send(path: String, method: String, jsonBody: [String: Any]) async throws -> Data {
+        guard let user = Auth.auth().currentUser else { throw ProfileEditionError.notAuthenticated }
         let token = try await user.getIDToken()
-        let url = URL(string: "\(baseURL)/dog/\(dogId)/behavior")!
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Send only the specific field we're updating (following DogModeService pattern)
-        let requestBody: [String: Any] = [
-            "wormingTreatmentDate": ISO8601DateFormatter().string(from: date)
-        ]
-        
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        print("📦 Worming Treatment Update Request:", requestBody)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProfileEditionError.invalidResponse
+
+        guard let url = URL(string: baseURL + path) else { throw ProfileEditionError.invalidResponse }
+
+        var req = URLRequest(url: url)
+        req.httpMethod = method
+        req.cachePolicy = .reloadIgnoringLocalCacheData
+        req.timeoutInterval = 30
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.httpBody = try JSONSerialization.data(withJSONObject: jsonBody)
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse else { throw ProfileEditionError.invalidResponse }
+
+        // Accept 200..299 as success
+        guard (200..<300).contains(http.statusCode) else {
+            let msg = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw ProfileEditionError.apiError("HTTP \(http.statusCode): \(msg)")
         }
-        
-        if httpResponse.statusCode == 200 {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let response = try decoder.decode(DogBehaviorUpdateResponse.self, from: data)
-            return response.dog
-        } else {
-            let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data)
-            throw ProfileEditionError.apiError(errorResponse?.error ?? "Unknown error")
-        }
+        return data
     }
 }
 
+// MARK: - Helpers
 
+extension Coordinate {
+    var asJSON: [String: Any] { ["latitude": latitude, "longitude": longitude] }
+}
 
 // MARK: - Response Models
 
@@ -328,17 +235,12 @@ enum ProfileEditionError: Error, LocalizedError {
     case notAuthenticated
     case invalidResponse
     case apiError(String)
-    
+
     var errorDescription: String? {
         switch self {
-        case .notAuthenticated:
-            return "User not authenticated"
-        case .invalidResponse:
-            return "Invalid response from server"
-        case .apiError(let message):
-            return message
+        case .notAuthenticated: return "User not authenticated"
+        case .invalidResponse:  return "Invalid response from server"
+        case .apiError(let m):  return m
         }
     }
 }
-
-
