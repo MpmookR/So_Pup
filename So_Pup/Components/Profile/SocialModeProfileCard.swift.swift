@@ -68,10 +68,15 @@ struct SocialProfileSection: View {
                 
                 // Dog Info
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(dog.displayName)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color.socialText)
+                    HStack{
+                        Text(dog.displayName)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color.socialText)
+                        
+                        Spacer()
+                        // average rating here
+                    }
                     
                     HStack {
                         HStack(spacing: 4) {

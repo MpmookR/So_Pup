@@ -41,14 +41,32 @@ final class ReviewService {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         print("📦 Submitting review:", body)
         
-        let (_, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
+        //        let (_, response) = try await URLSession.shared.data(for: request)
+        //
+        //        guard let httpResponse = response as? HTTPURLResponse,
+        //              (200..<300).contains(httpResponse.statusCode) else {
+        //            throw URLError(.badServerResponse)
+        //        }
+        //
+        //        print("✅ Review submitted successfully")
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+            
+            if !(200...299).contains(http.statusCode) {
+                // Try to decode { error: "...", message: "..." }
+                let payload = (try? JSONDecoder().decode(APIErrorPayload.self, from: data))
+                let _ = String(data: data, encoding: .utf8) ?? ""
+                let msg = payload?.message ?? payload?.error ?? "Unknown error"
+                print("❌ Server \(http.statusCode): \(msg)")
+                throw ReviewServiceError.server(message: msg, code: http.statusCode)
+            }
+            
+            print("✅ Review submitted (status \(http.statusCode))")
+        } catch let urlErr as URLError {
+            print("❌ Transport error: \(urlErr)")
+            throw ReviewServiceError.transport(urlErr)
         }
-        
-        print("✅ Review submitted successfully")
     }
     
     /// Fetch average review stats for a user
@@ -70,10 +88,15 @@ final class ReviewService {
             throw URLError(.badServerResponse)
         }
         
+        // Debug: Print raw response data
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("🔍 Raw response data: \(responseString)")
+        }
+        
         let decoder = makeISODecoder()
         
         let result = try decoder.decode(ReviewStats.self, from: data)
-        print("✅ Fetched review stats for user")
+        print("✅ Fetched review stats for user: averageRating=\(result.averageRating), reviewCount=\(result.reviewCount)")
         
         return result
     }
@@ -155,16 +178,25 @@ final class ReviewService {
         }
         return dec
     }
+    // eror handling
+    enum ReviewServiceError: LocalizedError {
+        case server(message: String, code: Int)
+        case transport(URLError)
+        
+        var errorDescription: String? {
+            switch self {
+            case .server(let message, let code):
+                return "HTTP \(code): \(message)"
+            case .transport(let e):
+                return e.localizedDescription
+            }
+        }
+    }
+    
+    struct APIErrorPayload: Decodable {
+        let error: String?
+        let message: String?
+    }
+    
+
 }
-
-// MARK: - Response Models
-
-/// Review statistics for a user
-struct ReviewStats: Codable {
-    let userId: String
-    let averageRating: Double
-    let totalReviews: Int
-    let ratingDistribution: [Int: Int] // rating -> count
-}
-
-

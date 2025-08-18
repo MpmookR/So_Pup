@@ -4,10 +4,9 @@ struct FullDogDetailsView: View {
     
     let dog: DogModel
     let owner: UserModel
-    let userCoordinate: Coordinate
-    let reviews: [Review]
+    let userCoordinate: Coordinate?
     
-    @ObservedObject var matchRequestVM: MatchRequestViewModel // share ref
+    @EnvironmentObject private var matchRequestVM: MatchRequestViewModel
     var onBack: (() -> Void)? = nil
     
     @State private var showRequestView = false
@@ -32,7 +31,7 @@ struct FullDogDetailsView: View {
                         
                         Divider()
                         
-                        ReviewSection(reviews: reviews, dogName: dog.displayName, ownerId: owner.id)
+                        ReviewSection(dogName: dog.displayName, owner: owner)
                     }
                 }
                 .padding(.horizontal)

@@ -63,12 +63,6 @@ struct ChatView: View {
             .onChange(of: chatVM.chatRoomProfiles.count) { _, _ in
                 if let id = router.pendingChatRoomId { tryNavigate(to: id) }
             }
-            // Load meetups when Meet-Up tab is selected
-            .task(id: selectedTab) {
-                if selectedTab == .meetup {
-                    await meetupVM.loadUserMeetups()
-                }
-            }
         }
     }
 

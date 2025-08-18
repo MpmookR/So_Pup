@@ -12,14 +12,17 @@ final class MatchScoringService {
         currentDog: DogModel,
         candidateDogIds: [String],
         userLocation: Coordinate,
-        filters: DogFilterSettings?
+        filters: DogFilterSettings?,
+        excludedDogIds: [String] = []
+    
     ) async throws -> [ScoredDog] {
         // Construct the DTO payload
         let scoringDTO = MatchScoringDTO(
             currentDogId: currentDog,
             filteredDogIds: candidateDogIds,
             userLocation: userLocation,
-            filters: filters?.toDTO()
+            filters: filters?.toDTO(),
+            excludedDogIds: excludedDogIds
         )
         
         guard let url = URL(string: "https://api-2z4snw37ba-uc.a.run.app/matchScoring/score") else {

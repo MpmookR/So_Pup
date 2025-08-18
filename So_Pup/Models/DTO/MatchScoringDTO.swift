@@ -7,5 +7,6 @@ struct MatchScoringDTO: Codable {
     let filteredDogIds: [String] // IDs of dogs to be considered for matching
     let userLocation: Coordinate
     let filters: DogFilterSettingsDTO?
+    let excludedDogIds: [String]?
 }
 

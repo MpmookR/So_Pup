@@ -3,12 +3,10 @@ import SwiftUI
 struct MatchCard: View {
     let dog: DogModel
     let owner: UserModel
-    let userCoordinate: Coordinate
+    let viewerCoordinate: Coordinate?
     let message: String
     let direction: MatchRequestCardData.MatchDirection
-    
-    var onViewProfile: (() -> Void)? = nil
-    
+        
     var onAccept: (() -> Void)? = nil
     var onDecline: (() -> Void)? = nil
 
@@ -33,20 +31,8 @@ struct MatchCard: View {
 
                 Spacer()
 
-                Button(action: {
-                    onViewProfile?()
-                }) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "person.circle")
-                            .font(.title3)
-                            .foregroundColor(dog.mode == .puppy ? Color.puppyButton : Color.socialButton)
+                ViewProfileButton(dog: dog, owner: owner, viewerCoordinate: viewerCoordinate)
 
-                        Text("view profile")
-                            .font(.caption)
-                            .foregroundColor(Color.socialText)
-                    }
-                }
-                .buttonStyle(.plain)
             }
 
             // Avatar and dog details
@@ -139,7 +125,7 @@ struct MatchCard: View {
         MatchCard(
             dog: MockDogData.dog1,
             owner: MockUserData.user1,
-            userCoordinate: MockUserData.user2.coordinate,
+            viewerCoordinate: MockUserData.user2.coordinate,
             message: "Hi! Our pups might get along — happy to connect and see if they'd enjoy a walk together! 🐶",
             direction: .incoming,
             onAccept: { print("Accepted") },
@@ -149,7 +135,7 @@ struct MatchCard: View {
         MatchCard(
             dog: MockDogData.dog2,
             owner: MockUserData.user2,
-            userCoordinate: MockUserData.user1.coordinate,
+            viewerCoordinate: MockUserData.user1.coordinate,
             message: "Looking forward to meeting you both soon!",
             direction: .outgoing
         )

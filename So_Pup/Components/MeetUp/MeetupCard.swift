@@ -6,6 +6,13 @@ struct MeetupCard: View {
     
     // Injected globally so you don’t have to pass meetupVM in every call
     @EnvironmentObject var meetupVM: MeetupViewModel
+    
+    @State private var showCreateReview = false   // <-- add
+
+    // If empty string, pass nil to the sheet (so it shows fallback pawprint)
+    private var otherDogImageURLOrNil: String? {
+        meetup.otherDogImageUrl.isEmpty ? nil : meetup.otherDogImageUrl
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -120,8 +127,8 @@ struct MeetupCard: View {
                 // Review button if allowed
                 if meetup.status.allowsComment {
                     MeetupActionButton(actionType: .review) {
-                        //MARK: need to implement review feature
-                        // TODO: navigate to review flow with meetup.id
+                        // Open the review sheet
+                        showCreateReview = true
                     }
                 }
             }
@@ -139,6 +146,14 @@ struct MeetupCard: View {
                         .clipShape(RoundedRectangle(cornerRadius: 21))
                 }
             }
+        }
+        .sheet(isPresented: $showCreateReview) {
+            CreateReview(
+                meetupId: meetup.id,
+                revieweeId: meetup.otherUserId,
+                revieweeDogName: meetup.otherDogName,
+                revieweeDogImageURL: otherDogImageURLOrNil
+            )
         }
         .alert("Error", isPresented: $meetupVM.showError) {
             Button("OK") {}
@@ -221,7 +236,24 @@ struct MeetupCard: View {
             ),
             onAction: { _ in }
         )
+        MeetupCard(
+            meetup: MeetupSummaryDTO(
+                id: "2",
+                chatRoomId: "chat2",
+                proposedTime: Date(),
+                locationName: "Dog Meadow",
+                status: .completed,
+                otherUserId: "user3",
+                otherUserName: "Sam",
+                otherDogId: "dog9",
+                otherDogName: "Milo",
+                otherDogImageUrl: "",
+                direction: .incoming
+            ),
+            onAction: { _ in }
+        )
     }
     .environmentObject(MeetupViewModel(authVM: AuthViewModel()))
+    .environmentObject(ReviewViewModel(authVM: AuthViewModel()))
     .padding(.horizontal)
 }

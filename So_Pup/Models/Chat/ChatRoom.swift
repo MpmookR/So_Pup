@@ -21,8 +21,6 @@ struct ChatRoomCreation: Codable {
     var chatroomId: String
 }
 
-import Foundation
-
 extension ChatRoom {
     func otherUserId(currentUserId: String) -> String? {
         userIds.first { $0 != currentUserId }
