@@ -6,8 +6,9 @@ struct HealthStatusSection: View {
 
     // Derive a verification status from current draft dates
     private var isVerified: Bool {
-        vm.fleaTreatmentDate != nil || vm.wormingTreatmentDate != nil
+        vm.fleaTreatmentDate != nil && vm.wormingTreatmentDate != nil
     }
+
     private var statusText: String { isVerified ? "Verified" : "Unverified" }
     private var statusColor: Color { isVerified ? .green : .red }
     private var statusIcon: String { isVerified ? "checkmark.circle.fill" : "exclamationmark.triangle" }
@@ -41,20 +42,20 @@ struct HealthStatusSection: View {
                 VStack(spacing: 12) {
                     HealthDatePicker(
                         title: "Flea Treatment",
-                        subtitle: reminderText(for: vm.fleaTreatmentDate, reminderDays: 2),
+                        subtitle: reminderText(for: vm.fleaTreatmentDate, reminderDays: 30),
                         date: vm.fleaTreatmentDate,
                         onDateSelected: { selectedDate in
-                            Task { await vm.setFleaTreatmentDate(selectedDate) }
+                            Task { await vm.setHealthDates(flea: selectedDate, worming: vm.wormingTreatmentDate)}
                         }
                     )
                     .disabled(vm.isSavingHealth)
 
                     HealthDatePicker(
                         title: "Worming Treatment",
-                        subtitle: reminderText(for: vm.wormingTreatmentDate, reminderDays: 81),
+                        subtitle: reminderText(for: vm.wormingTreatmentDate, reminderDays: 90),
                         date: vm.wormingTreatmentDate,
                         onDateSelected: { selectedDate in
-                            Task { await vm.setWormingTreatmentDate(selectedDate) }
+                            Task { await vm.setHealthDates(flea: vm.fleaTreatmentDate, worming: selectedDate) }
                         }
                     )
                     .disabled(vm.isSavingHealth)
@@ -81,10 +82,25 @@ struct HealthStatusSection: View {
         }
     }
 
-    private func reminderText(for date: Date?, reminderDays: Int) -> String {
-        guard let date else { return "Not completed" }
-        let daysSince = Calendar.current.dateComponents([.day], from: date, to: Date()).day ?? 0
-        let daysUntilReminder = reminderDays - daysSince
-        return daysUntilReminder <= 0 ? "Due now" : "Reminder: Due in \(daysUntilReminder) days"
+    private func reminderText(for lastDate: Date?, reminderDays: Int) -> String {
+        guard let lastDate else { return "Not completed" }
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let last = cal.startOfDay(for: lastDate)
+
+        guard let nextDue = cal.date(byAdding: .day, value: reminderDays, to: last) else { return "—" }
+        let days = cal.dateComponents([.day], from: today, to: nextDue).day ?? 0
+
+        switch days {
+        case Int.min..<0:
+            return "Overdue by \(-days) days"
+        case 0:
+            return "Due today"
+        case 1:
+            return "Due tomorrow"
+        default:
+            return "Due in \(days) days"
+        }
     }
+
 }

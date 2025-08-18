@@ -149,30 +149,37 @@ final class UserProfileEditionService {
         return try decoder.decode(DogImagesUpdateResponse.self, from: data).dog
     }
 
-    // MARK: - Convenience Health Methods
+    // MARK: - Health
+    /// PATCH-like update for health dates. Sends only the fields you pass.
+    /// Backend: PUT /profile/dog/:dogId/health
+    func updateDogHealth(
+        dogId: String,
+        fleaTreatmentDate: Date? = nil,
+        wormingTreatmentDate: Date? = nil
+    ) async throws -> DogModel {
+        // Must send at least one field
+        precondition(fleaTreatmentDate != nil || wormingTreatmentDate != nil,
+                     "Provide at least one treatment date")
 
-    func updateFleaTreatmentDate(dogId: String, date: Date) async throws -> DogModel {
+        var body: [String: Any] = [:]
+        if let fleaTreatmentDate {
+            body["fleaTreatmentDate"] = Self.iso.string(from: fleaTreatmentDate)
+        }
+        if let wormingTreatmentDate {
+            body["wormingTreatmentDate"] = Self.iso.string(from: wormingTreatmentDate)
+        }
+
         let data = try await send(
-            path: "/dog/\(dogId)/behavior",
+            path: "/dog/\(dogId)/health",
             method: "PUT",
-            jsonBody: ["fleaTreatmentDate": Self.iso.string(from: date)]
+            jsonBody: body
         )
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(DogBehaviorUpdateResponse.self, from: data).dog
+        return try decoder.decode(DogHealthUpdateResponse.self, from: data).dog
     }
-
-    func updateWormingTreatmentDate(dogId: String, date: Date) async throws -> DogModel {
-        let data = try await send(
-            path: "/dog/\(dogId)/behavior",
-            method: "PUT",
-            jsonBody: ["wormingTreatmentDate": Self.iso.string(from: date)]
-        )
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(DogBehaviorUpdateResponse.self, from: data).dog
-    }
-
+    
     // MARK: - Core request helper
 
     private func send(path: String, method: String, jsonBody: [String: Any]) async throws -> Data {
@@ -229,6 +236,12 @@ struct DogImagesUpdateResponse: Codable {
     let message: String
     let dog: DogModel
 }
+
+struct DogHealthUpdateResponse: Codable {
+    let message: String
+    let dog: DogModel
+}
+
 
 // MARK: - Errors
 enum ProfileEditionError: Error, LocalizedError {

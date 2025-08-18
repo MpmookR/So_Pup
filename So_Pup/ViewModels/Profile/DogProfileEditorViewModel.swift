@@ -173,44 +173,27 @@ final class DogProfileEditorViewModel: ObservableObject {
             popError("Failed to update images", error)
         }
     }
+    // MARK: Health
 
-    /// Update flea treatment date only
-    func setFleaTreatmentDate(_ date: Date?) async {
-        // If clearing, send a full behavior update with nil? Your API doesn't have a "clear" endpoint.
-        // Here we only support setting (non-nil). Add clear path if your backend supports it.
-        guard let date else {
-            popError("Clearing flea treatment is not supported by this endpoint.", nil)
+    func setHealthDates(flea: Date?, worming: Date?) async {
+        guard flea != nil || worming != nil else {
+            popError("Provide at least one treatment date.", nil)
             return
         }
         isSavingHealth = true
         defer { isSavingHealth = false }
 
         do {
-            let updated = try await service.updateFleaTreatmentDate(dogId: original.id, date: date)
+            let updated = try await service.updateDogHealth(
+                dogId: original.id,
+                fleaTreatmentDate: flea,
+                wormingTreatmentDate: worming
+            )
             sync(from: updated)
             afterSave(updated)
-            successMessage = "Flea treatment updated ✅"
+            successMessage = "Health status updated ✅"
         } catch {
-            popError("Failed to update flea treatment date", error)
-        }
-    }
-
-    /// Update worming treatment date only
-    func setWormingTreatmentDate(_ date: Date?) async {
-        guard let date else {
-            popError("Clearing worming treatment is not supported by this endpoint.", nil)
-            return
-        }
-        isSavingHealth = true
-        defer { isSavingHealth = false }
-
-        do {
-            let updated = try await service.updateWormingTreatmentDate(dogId: original.id, date: date)
-            sync(from: updated)
-            afterSave(updated)
-            successMessage = "Worming treatment updated ✅"
-        } catch {
-            popError("Failed to update worming treatment date", error)
+            popError("Failed to update health status", error)
         }
     }
 
