@@ -68,7 +68,7 @@ struct MatchView: View {
                 NavigationLink(
                     value: MatchProfile(dog: card.dog, owner: card.owner, distanceInMeters: nil)
                 ) {
-                    pendingCardLabel(for: card) // ✅ label uses viewerCoordinate below
+                    pendingCardLabel(for: card) // label uses viewerCoordinate below
                 }
                 .buttonStyle(.plain)
             }

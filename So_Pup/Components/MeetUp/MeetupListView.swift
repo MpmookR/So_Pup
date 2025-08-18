@@ -1,13 +1,17 @@
 import SwiftUI
-
+//
+//  Lists the user’s meet-ups by status (All, Pending, Upcoming, Completed).
+//  If the current user’s dog is in Puppy Mode, meet-ups are disabled
+//  clear empty-state warning is shown instead.
+//
 private enum MeetupTab: Int, CaseIterable {
     case all = 0, pending, upcoming, completed
-
+    
     var title: String {
         switch self {
-        case .all: return "All Meet-Up List"
-        case .pending: return "Pending"
-        case .upcoming: return "Upcoming"
+        case .all:       return "All Meet-Up List"
+        case .pending:   return "Pending"
+        case .upcoming:  return "Upcoming"
         case .completed: return "Completed"
         }
     }
@@ -15,9 +19,11 @@ private enum MeetupTab: Int, CaseIterable {
 
 struct MeetupListView: View {
     @EnvironmentObject var meetupVM: MeetupViewModel
+    @EnvironmentObject var matchingVM: MatchingViewModel   // access current dog/mode
+    
     @State private var selectedTab: MeetupTab = .all
-
-    // Precompute to keep body simpler
+    
+    // Filtered data for the selected tab (used only when not in Puppy Mode)
     private var filteredMeetups: [MeetupSummaryDTO] {
         switch selectedTab {
         case .all:       return meetupVM.userMeetups
@@ -26,7 +32,7 @@ struct MeetupListView: View {
         case .completed: return meetupVM.userMeetups.filter { $0.status == .completed }
         }
     }
-
+    
     private var emptyMessage: String {
         switch selectedTab {
         case .all:       return "No meetups yet"
@@ -35,12 +41,21 @@ struct MeetupListView: View {
         case .completed: return "No completed meetups"
         }
     }
-
+    
+    // MARK: - Viewer gating
+    /// Returns true when the current viewer’s dog is in Puppy Mode.
+    private var isViewerPuppy: Bool {
+        matchingVM.currentDog?.mode == .puppy
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             tabSelector
-
-            if meetupVM.isLoading {
+            
+            // If viewer is in Puppy Mode, always show the puppy empty state
+            if isViewerPuppy {
+                puppyModeEmptyState
+            } else if meetupVM.isLoading {
                 loadingState
             } else if filteredMeetups.isEmpty {
                 emptyState
@@ -58,10 +73,11 @@ struct MeetupListView: View {
                 }
             }
         }
-        // Load once and also refresh when the tab changes (use .task(id:))
+        // Load list only when NOT in Puppy Mode
         .task(id: selectedTab) {
+            guard !isViewerPuppy else { return }   // skip fetch when puppy
             await meetupVM.loadUserMeetups(
-                type: selectedTab == .all ? nil : nil, // keep nil unless you later map type
+                type: nil, // keep nil unless you later map 'type'
                 status: {
                     switch selectedTab {
                     case .all:       return nil
@@ -72,8 +88,10 @@ struct MeetupListView: View {
                 }()
             )
         }
-        .refreshable { await meetupVM.loadUserMeetups() }
-
+        .refreshable {
+            guard !isViewerPuppy else { return }   // no-op refresh when puppy
+            await meetupVM.loadUserMeetups()
+        }
         // Surface VM feedback
         .alert(meetupVM.errorMessage, isPresented: $meetupVM.showError) {
             Button("OK", role: .cancel) { }
@@ -92,7 +110,6 @@ private extension MeetupListView {
         VStack {
             // Primary wide button for "All"
             tabButton(title: MeetupTab.all.title, for: .all)
-
             Divider()
             HStack(spacing: 6) {
                 tabButton(title: MeetupTab.pending.title, for: .pending)
@@ -104,7 +121,7 @@ private extension MeetupListView {
         .cornerRadius(21)
         .padding(.horizontal)
     }
-
+    
     func tabButton(title: String, for tab: MeetupTab) -> some View {
         Button(title) { selectedTab = tab }
             .frame(maxWidth: .infinity)
@@ -112,8 +129,9 @@ private extension MeetupListView {
             .background(selectedTab == tab ? Color.socialButton : Color.clear)
             .foregroundColor(selectedTab == tab ? .white : .socialText)
             .cornerRadius(21)
+            .disabled(isViewerPuppy) // optional: freeze tabs while in Puppy Mode
     }
-
+    
     var loadingState: some View {
         VStack {
             ProgressView().scaleEffect(1.2)
@@ -123,7 +141,7 @@ private extension MeetupListView {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
+    
     var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: "calendar.badge.plus")
@@ -142,11 +160,28 @@ private extension MeetupListView {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+    
+    /// empty state for Puppy Mode
+    var puppyModeEmptyState: some View {
+        VStack(spacing: 8) {
+            Text("🚫 Meet-up is not available")
+                .font(.headline)
+                .foregroundColor(.socialText)
+                .multilineTextAlignment(.center)
+            Text("Puppies under 12 weeks should avoid in-person interactions until fully vaccinated.")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.top,56)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
 }
 
 // MARK: - Actions
 private extension MeetupListView {
     func handleMeetupAction(meetup: MeetupSummaryDTO, action: MeetupAction) {
+        guard !isViewerPuppy else { return } // extra guard; actions disabled in Puppy Mode
         Task {
             switch action {
             case .accept:
@@ -158,7 +193,6 @@ private extension MeetupListView {
             case .complete:
                 await meetupVM.markMeetupComplete(chatRoomId: meetup.chatRoomId, meetupId: meetup.id)
             case .review:
-                // Navigate to review screen if needed
                 print("Review for meetup \(meetup.id)")
             }
             await meetupVM.loadUserMeetups()

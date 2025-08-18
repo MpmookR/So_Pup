@@ -5,7 +5,7 @@ struct ChatScreen: View {
     let owner: UserModel
     let room: ChatRoom
     let currentUserId: String
-    let viewerCoordinate: Coordinate?
+//    let viewerCoordinate: Coordinate?
     var onBack: (() -> Void)? = nil
         
     @StateObject private var messageService = FirestoreMessageService()
@@ -29,7 +29,7 @@ struct ChatScreen: View {
                 ViewProfileButton(
                     dog: dog,
                     owner: owner,
-                    viewerCoordinate: viewerCoordinate,
+                    viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init),
                     title: nil
                 )
                     .padding(.trailing, 12)
