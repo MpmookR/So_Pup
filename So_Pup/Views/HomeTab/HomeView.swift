@@ -9,7 +9,6 @@ import SwiftData
 //  - Navigation to full dog profile details
 //  - Filter sheet for refining match results
 //
-
 struct HomeView: View {
     @State private var showFilterSheet = false                  // controls filter sheet presentation
     @State private var filterSettings = DogFilterSettings()     // local copy of filter settings

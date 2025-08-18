@@ -1,10 +1,15 @@
 import SwiftUI
 import FirebaseFunctions
 
+/// MatchView
+/// Purpose:
+/// Shows incoming (“Pending”) and outgoing (“Requested”) match requests.
+/// Tapping a card navigates to the full dog profile, and accept/decline updates the request.
+/// Distances are computed from the *current viewer’s* location (matchingVM.userCoordinate).
 struct MatchView: View {
     @EnvironmentObject var matchRequestVM: MatchRequestViewModel
     @EnvironmentObject var matchingVM: MatchingViewModel
-    
+
     @State private var selectedTab = "Pending"
     @State private var hasLoaded = false
 
@@ -28,19 +33,19 @@ struct MatchView: View {
                 }
                 .background(.white)
             }
-            // Keep destination at the stack level to simplify generics
+            // Destination kept at stack level; passes the viewer’s coordinate
             .navigationDestination(for: MatchProfile.self) { profile in
                 if let viewerCoordinate = matchingVM.userCoordinate {
                     FullDogDetailsView(
                         dog: profile.dog,
                         owner: profile.owner,
-                        userCoordinate: Coordinate(from: viewerCoordinate)
+                        userCoordinate: Coordinate(from: viewerCoordinate) 
                     )
                 } else {
                     Text("Loading...")
                 }
             }
-            // One-time load
+            // Load requests once
             .task {
                 guard !hasLoaded else { return }
                 hasLoaded = true
@@ -63,7 +68,7 @@ struct MatchView: View {
                 NavigationLink(
                     value: MatchProfile(dog: card.dog, owner: card.owner, distanceInMeters: nil)
                 ) {
-                    pendingCardLabel(for: card)
+                    pendingCardLabel(for: card) // ✅ label uses viewerCoordinate below
                 }
                 .buttonStyle(.plain)
             }
@@ -81,7 +86,7 @@ struct MatchView: View {
                 MatchCard(
                     dog: card.dog,
                     owner: card.owner,
-                    viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init),
+                    viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init), // ✅ viewer location
                     message: card.message,
                     direction: card.direction
                 )
@@ -89,14 +94,14 @@ struct MatchView: View {
         }
     }
 
-    // MARK: - Label (concrete type to avoid generic blow-ups)
+    // MARK: - Label (uses viewer’s coordinate)
 
     @ViewBuilder
     private func pendingCardLabel(for card: MatchRequestCardData) -> some View {
         MatchCard(
             dog: card.dog,
             owner: card.owner,
-            viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init),
+            viewerCoordinate: matchingVM.userCoordinate.map(Coordinate.init), // ✅ viewer location
             message: card.message,
             direction: card.direction,
             onAccept: { handleStatusUpdate(requestId: card.requestId, status: .accepted) },
