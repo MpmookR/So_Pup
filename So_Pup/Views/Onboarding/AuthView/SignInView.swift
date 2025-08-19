@@ -69,7 +69,7 @@ struct SignInView: View {
                     .font(.callout)
                     .foregroundColor(.black)
 
-                // SSO
+                
                 VStack(spacing: 16) {
                     AppleSignInButtonView()
                     GoogleSignInButtonView()

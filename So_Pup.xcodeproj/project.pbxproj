@@ -297,6 +297,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "So-Pup-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location helps enable social features in your area.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to help you find nearby dogs for playdates.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -329,6 +330,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "So-Pup-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location helps enable social features in your area.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to help you find nearby dogs for playdates.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

@@ -16,6 +16,8 @@ struct EmailSignUpView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
+                Text("")
+                    .foregroundStyle(.opacity(0))
                 // Nav
                 CustomNavBar(
                     title: nil,
