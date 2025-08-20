@@ -27,40 +27,28 @@ final class MeetupService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         
-        let body: [String: Any] = [
-            "meetup": [
-                "proposedTime": ISO8601DateFormatter().string(from: meetup.proposedTime),
-                "locationName": meetup.locationName,
-                "locationCoordinate": [
-                    "latitude": meetup.locationCoordinate.latitude,
-                    "longitude": meetup.locationCoordinate.longitude
-                ],
-                "meetUpMessage": meetup.meetUpMessage
-            ],
-            "senderId": senderId,
-            "receiverId": receiverId,
-            "senderDogId": senderDogId,
-            "receiverDogId": receiverDogId
-        ]
-        
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        print("📦 Creating meetup request:", body)
+        let dto = CreateMeetupRequestDTO(
+            meetup: meetup,
+            senderId: senderId,
+            receiverId: receiverId,
+            senderDogId: senderDogId,
+            receiverDogId: receiverDogId
+        )
+        request.httpBody = try JSONCoder.encoder().encode(dto)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
+        guard let http = response as? HTTPURLResponse,
+              (200..<300).contains(http.statusCode) else {
+            // Try to surface backend error if present
+            if let http = response as? HTTPURLResponse {
+                if let err = try? JSONCoder.decoder().decode(ErrorResponse.self, from: data) {
+                    throw NSError(domain: "MeetupService", code: http.statusCode,
+                                  userInfo: [NSLocalizedDescriptionKey: err.error])
+                }
+            }
             throw URLError(.badServerResponse)
         }
         
-        // Debug: Print the raw response data
-        if let responseString = String(data: data, encoding: .utf8) {
-            print("🔍 Raw response data: \(responseString)")
-        }
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-    
         print("✅ Meetup request created successfully")
         
     }
@@ -80,16 +68,21 @@ final class MeetupService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         
-        let body: [String: Any] = [
+        let body: [String: String] = [
             "status": status.rawValue,
             "receiverId": receiverId
         ]
         
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.httpBody = try JSONCoder.encoder().encode(body)
         print("📦 Updating meetup status:", body)
         
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            if let http = response as? HTTPURLResponse,
+               let err = try? JSONCoder.decoder().decode(ErrorResponse.self, from: data) {
+                throw NSError(domain: "MeetupService", code: http.statusCode,
+                              userInfo: [NSLocalizedDescriptionKey: err.error])
+            }
             throw URLError(.badServerResponse)
         }
         print("✅ Meetup status updated to \(status.rawValue)")
@@ -107,15 +100,20 @@ final class MeetupService {
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         
-        let body: [String: Any] = ["receiverId": receiverId]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        
+        let body: [String: String] = ["receiverId": receiverId]
+        request.httpBody = try JSONCoder.encoder().encode(body)
         print("📦 Cancelling meetup request:", body)
         
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            if let http = response as? HTTPURLResponse,
+               let err = try? JSONCoder.decoder().decode(ErrorResponse.self, from: data) {
+                throw NSError(domain: "MeetupService", code: http.statusCode,
+                              userInfo: [NSLocalizedDescriptionKey: err.error])
+            }
             throw URLError(.badServerResponse)
         }
         print("✅ Meetup request cancelled successfully")
@@ -133,16 +131,21 @@ final class MeetupService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
-        // No body required
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            if let http = response as? HTTPURLResponse,
+               let err = try? JSONCoder.decoder().decode(ErrorResponse.self, from: data) {
+                throw NSError(domain: "MeetupService", code: http.statusCode,
+                              userInfo: [NSLocalizedDescriptionKey: err.error])
+            }
             throw URLError(.badServerResponse)
         }
         print("✅ Meetup marked as complete")
     }
-
+    
     /// Fetch meetups for a user with optional filters
     func fetchUserMeetups(
         userId: String,
@@ -179,23 +182,64 @@ final class MeetupService {
         
         // 6. Send the request and get the response
         let (data, response) = try await URLSession.shared.data(for: request)
-
+        
         // 7. Ensure the response status code is in the success range (200-299)
         guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
+                      (200..<300).contains(httpResponse.statusCode) else {
+                    if let http = response as? HTTPURLResponse,
+                       let err = try? JSONCoder.decoder().decode(ErrorResponse.self, from: data) {
+                        throw NSError(domain: "MeetupService", code: http.statusCode,
+                                      userInfo: [NSLocalizedDescriptionKey: err.error])
+                    }
+                    throw URLError(.badServerResponse)
+                }
         
         // 8. Decode JSON into our model
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601 // Ensure ISO date parsing
-        let result = try decoder.decode(FetchMeetupsResponse.self, from: data)
-        
-        // Debug log: Number of meetups fetched
-        print("✅ Fetched \(result.meetups.count) meetups for user")
-        
-        // 9. Return the decoded array of meetups
-        return result.meetups
+        let result = try JSONCoder.decoder().decode(FetchMeetupsResponse.self, from: data)
+         print("✅ Fetched \(result.meetups.count) meetups for user")
+         return result.meetups
+     
     }
-
+    
+    // MARK: - DTOs (request-only)
+    private struct CoordinateDTO: Codable {
+        let latitude: Double
+        let longitude: Double
+    }
+    
+    private struct MeetupPayloadDTO: Codable {
+        let proposedTime: Date
+        let locationName: String
+        let locationCoordinate: CoordinateDTO
+        let meetUpMessage: String
+    }
+    
+    private struct CreateMeetupRequestDTO: Codable {
+        let meetup: MeetupPayloadDTO
+        let senderId: String
+        let receiverId: String
+        let senderDogId: String
+        let receiverDogId: String
+        
+        init(meetup: MeetupRequest,
+             senderId: String,
+             receiverId: String,
+             senderDogId: String,
+             receiverDogId: String) {
+            self.meetup = .init(
+                proposedTime: meetup.proposedTime,
+                locationName: meetup.locationName,
+                locationCoordinate: .init(
+                    latitude: meetup.locationCoordinate.latitude,
+                    longitude: meetup.locationCoordinate.longitude
+                ),
+                meetUpMessage: meetup.meetUpMessage
+            )
+            self.senderId = senderId
+            self.receiverId = receiverId
+            self.senderDogId = senderDogId
+            self.receiverDogId = receiverDogId
+        }
+    }
+    
 }

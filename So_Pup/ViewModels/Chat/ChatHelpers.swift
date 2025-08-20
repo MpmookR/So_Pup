@@ -20,44 +20,66 @@ enum ISO {
 // MARK: - Card builder (ChatRoom -> ChatRoomCardData)
 // Builds ChatRoomCardData arrays from rooms
 struct ChatCardBuilder {
-    static func build(from rooms: [ChatRoom],
-                      currentDogId: String,
-                      profileService: ProfileDataService) async -> [ChatRoomCardData] {
 
-        var dogCache:  [String: DogModel] = [:]
-        var userCache: [String: UserModel] = [:]
+    // Thread-safe caches guarded by an actor
+    private actor Cache {
+        var dogs: [String: DogModel] = [:]
+        var users: [String: UserModel] = [:]
+
+        func dog(for id: String) -> DogModel? { dogs[id] }
+        func putDog(_ dog: DogModel, for id: String) { dogs[id] = dog }
+
+        func user(for id: String) -> UserModel? { users[id] }
+        func putUser(_ user: UserModel, for id: String) { users[id] = user }
+    }
+
+    static func build(
+        from rooms: [ChatRoom],
+        currentDogId: String,
+        profileService: ProfileDataService
+    ) async -> [ChatRoomCardData] {
+
+        let cache = Cache()                  // <- shared, but synchronized
         var results: [ChatRoomCardData] = []
 
         await withTaskGroup(of: ChatRoomCardData?.self) { group in
             for room in rooms {
                 group.addTask {
-                    // Pick the "other" dog id in this room
-                    guard let otherDogId = room.dogIds.first(where: { $0 != currentDogId }) else { return nil }
+                    // 1) find the "other" dog id
+                    guard let otherDogId = room.dogIds.first(where: { $0 != currentDogId }) else {
+                        return nil
+                    }
 
-                    // DOG (inline cache)
+                    // 2) DOG (use cache first)
                     let dog: DogModel
-                    if let cached = dogCache[otherDogId] {
-                        dog = cached
+                    if let c = await cache.dog(for: otherDogId) {
+                        dog = c
                     } else if let fetched = try? await profileService.fetchDog(by: otherDogId) {
-                        dogCache[otherDogId] = fetched
+                        await cache.putDog(fetched, for: otherDogId)
                         dog = fetched
-                    } else { return nil }
+                    } else {
+                        return nil
+                    }
 
-                    // OWNER from dog's ownerId (don’t trust room.userIds)
+                    // 3) OWNER (use dog's ownerId, not room.userIds)
                     let ownerId = dog.ownerId
                     let owner: UserModel
-                    if let cached = userCache[ownerId] {
-                        owner = cached
+                    if let c = await cache.user(for: ownerId) {
+                        owner = c
                     } else if let fetched = try? await profileService.fetchUser(by: ownerId) {
-                        userCache[ownerId] = fetched
+                        await cache.putUser(fetched, for: ownerId)
                         owner = fetched
-                    } else { return nil }
+                    } else {
+                        return nil
+                    }
 
+                    // 4) Build card
                     return ChatRoomCardData(room: room, dog: dog, owner: owner)
                 }
             }
+
             for await card in group {
-                if let card { results.append(card) }
+                if let card { results.append(card) }   // single-threaded append here
             }
         }
 

@@ -7,6 +7,7 @@ final class MatchRequestService {
     
     private let baseURL = "https://api-2z4snw37ba-uc.a.run.app/matchRequest"
 
+    // MARK: Send match request
     func sendMatchRequest(
         fromDogId: String,
         toUserId: String,
@@ -24,15 +25,14 @@ final class MatchRequestService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         // Construct the request body using dictionary encoding
-        let body: [String: Any] = [
+        let body: [String: String] = [
             "fromDogId": fromDogId,
             "toUserId": toUserId,
             "toDogId": toDogId,
             "message": message
         ]
         
-        // Encode the body as JSON
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.httpBody = try JSONCoder.encoder().encode(body)
         print("📦 Request:", body)
         
         // Send the HTTP request and wait for the response
@@ -69,20 +69,19 @@ final class MatchRequestService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         
-        let body: [String: Any] = ["status": status.rawValue]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let body: [String: String] = ["status": status.rawValue]
         
+        request.httpBody = try JSONCoder.encoder().encode(body)
         print("📦 Request:", body)
 
         // Send the request and validate the response
         let (data, response) = try await URLSession.shared.data(for: request)
-        
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
             throw URLError(.badServerResponse)
         }
 
-        let decoded = try JSONDecoder().decode(UpdateMatchStatusResponse.self, from: data)
+        let decoded = try JSONCoder.decoder().decode(UpdateMatchStatusResponse.self, from: data)
         print("✅ Status updated: \(decoded.message), chatRoomId: \(decoded.chatRoomId ?? "nil")")
         return decoded
     }
@@ -103,20 +102,19 @@ final class MatchRequestService {
 
         // Execute request
         let (data, response) = try await URLSession.shared.data(for: request)
-
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
             throw URLError(.badServerResponse)
         }
         
         // Decode response JSON format >> exists: true/false
-        let result = try JSONDecoder().decode([String: Bool].self, from: data)
+        let result = try JSONCoder.decoder().decode([String: Bool].self, from: data)
         return result["exists"] ?? false
     }
     
     func fetchMatchRequests(
         dogId: String,
-        type: String, // should be "incoming" or "outgoing"
+        type: String, // "incoming" or "outgoing"
         authToken: String
     ) async throws -> [MatchRequest] {
         guard let url = URL(string: "\(baseURL)/\(dogId)?type=\(type)") else {
@@ -128,15 +126,12 @@ final class MatchRequestService {
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await URLSession.shared.data(for: request)
-
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
             throw URLError(.badServerResponse)
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([MatchRequest].self, from: data)
+        return try JSONCoder.decoder().decode([MatchRequest].self, from: data)
     }
 
 

@@ -3,10 +3,9 @@ import SwiftUI
 import FirebaseAuth
 
 final class MatchScoringService {
-    
     static let shared = MatchScoringService()
     private init() {}
-    
+
     /// Sends a scoring request to the backend and returns scored matches
     func sendScoringRequest(
         currentDog: DogModel,
@@ -14,9 +13,9 @@ final class MatchScoringService {
         userLocation: Coordinate,
         filters: DogFilterSettings?,
         excludedDogIds: [String] = []
-    
     ) async throws -> [ScoredDog] {
-        // Construct the DTO payload
+
+        // 1) Build DTO
         let scoringDTO = MatchScoringDTO(
             currentDogId: currentDog,
             filteredDogIds: candidateDogIds,
@@ -24,45 +23,68 @@ final class MatchScoringService {
             filters: filters?.toDTO(),
             excludedDogIds: excludedDogIds
         )
-        
+
         guard let url = URL(string: "https://api-2z4snw37ba-uc.a.run.app/matchScoring/score") else {
             throw URLError(.badURL)
         }
-        
-        // Get Firebase ID token
         guard let user = Auth.auth().currentUser else {
             throw URLError(.userAuthenticationRequired)
         }
-        let idToken = try await user.getIDToken()
-        
-        // Build the POST request
+
+        // 2) Request (use your JSONCoder encoder in case dates are present in the body)
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-        
-        let jsonData = try JSONEncoder().encode(scoringDTO)
-        request.httpBody = jsonData
-        
-#if DEBUG
-        if let jsonString = String(data: jsonData, encoding: .utf8) {
-            print("📤 Sending MatchScoringDTO:\n\(jsonString)")
-        }
-#endif
-        
-        let (data, _) = try await URLSession.shared.data(for: request)
-        
-#if DEBUG
-        if let rawResponse = String(data: data, encoding: .utf8) {
-            print("📥 Raw response:\n\(rawResponse)")
-        }
-#endif
-        
-        // Decode response
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let matches = try decoder.decode([ScoredDog].self, from: data)
 
-        return matches
+        let encoder = JSONCoder.encoder()
+        let body = try encoder.encode(scoringDTO)
+        request.httpBody = body
+
+        // Helpful debug prints (safe in TestFlight)
+        if let jsonString = String(data: body, encoding: .utf8) {
+            print("📤 MatchScoring request:\n\(jsonString)")
+        }
+
+        // Helper to execute with a specific token
+        func perform(with token: String) async throws -> (Data, HTTPURLResponse) {
+            var req = request
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse else {
+                throw URLError(.badServerResponse)
+            }
+            return (data, http)
+        }
+
+        // 3) First try with current token
+        var token = try await user.getIDToken()
+        var (data, http) = try await perform(with: token)
+
+        // 4) Retry once on 401/403 (stale token / auth race)
+        if http.statusCode == 401 || http.statusCode == 403 {
+            token = try await user.getIDToken()
+            (data, http) = try await perform(with: token)
+        }
+
+        // 5) Non-200 handling (surface message to UI layer if you want)
+        guard (200..<300).contains(http.statusCode) else {
+            let bodyText = String(data: data, encoding: .utf8) ?? "<no body>"
+            print("❌ MatchScoring HTTP \(http.statusCode): \(bodyText)")
+            throw URLError(.badServerResponse)
+        }
+
+        if let raw = String(data: data, encoding: .utf8) {
+            print("📥 MatchScoring response:\n\(raw)")
+        }
+
+        // 6) Decode with tolerant ISO8601 strategy
+        let decoder = JSONCoder.decoder()
+        do {
+            let matches = try decoder.decode([ScoredDog].self, from: data)
+            return matches
+        } catch {
+            print("❌ MatchScoring decode failed: \(error.localizedDescription)")
+            throw error
+        }
     }
 }

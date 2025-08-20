@@ -8,7 +8,7 @@ struct ChatDestination: View {
     var onBack: () -> Void
     
     @StateObject private var sendVM: SendMessageViewModel
-    
+
     @State private var viewerCoordinate: Coordinate? = nil
     
     init(card: ChatRoomCardData, onBack: @escaping () -> Void, authVM: AuthViewModel? = nil) {

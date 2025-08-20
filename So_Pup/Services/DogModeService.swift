@@ -5,9 +5,9 @@ import FirebaseAuth
 final class DogModeService {
     static let shared = DogModeService()
     private init() {}
-    
+
     private let baseURL = "https://api-2z4snw37ba-uc.a.run.app/dogs"
-    
+
     // MARK: - Update Vaccination Dates
     func updateVaccinations(
         dogId: String,
@@ -18,126 +18,97 @@ final class DogModeService {
         guard let url = URL(string: "\(baseURL)/\(dogId)/vaccinations") else {
             throw URLError(.badURL)
         }
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-        
-        // Prepare vaccination data using dictionary encoding 
-        var body: [String: Any] = [:]
-        
-        if let vaccination1Date = coreVaccination1Date {
-            body["coreVaccination1Date"] = ISO8601DateFormatter().string(from: vaccination1Date)
-        }
-        
-        if let vaccination2Date = coreVaccination2Date {
-            body["coreVaccination2Date"] = ISO8601DateFormatter().string(from: vaccination2Date)
-        }
-        
-        // Encode the body as JSON
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        print("📦 Request:", body)
-        
-        // Send the HTTP request and wait for the response
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        // Validate the HTTP response
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
+
+        let bodyDTO = VaccinationUpdateDTO(
+            coreVaccination1Date: coreVaccination1Date,
+            coreVaccination2Date: coreVaccination2Date
+        )
+
+        let encoder = JSONCoder.encoder()
+        request.httpBody = try encoder.encode(bodyDTO)
+
+        let (data, resp) = try await URLSession.shared.data(for: request)
+        guard let http = resp as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+
+        let decoder = JSONCoder.decoder()
+        if (200..<300).contains(http.statusCode) {
+            return try decoder.decode(VaccinationUpdateResponse.self, from: data)
+        } else {
+            if let err = try? decoder.decode(ErrorResponse.self, from: data) {
+                throw NSError(domain: "DogModeService", code: http.statusCode,
+                              userInfo: [NSLocalizedDescriptionKey: err.error])
+            }
             throw URLError(.badServerResponse)
         }
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let responseData = try decoder.decode(VaccinationUpdateResponse.self, from: data)
-        print("✅ Vaccination update successful, ready to switch: \(responseData.readyToSwitchMode)")
-        return responseData
     }
-    
+
     // MARK: - Manual Mode Switch
     func switchDogMode(dogId: String, mode: DogMode, authToken: String) async throws -> DogModel {
-        guard let url = URL(string: "\(baseURL)/\(dogId)/modeSwitch") else {
-            throw URLError(.badURL)
-        }
-        
+        guard let url = URL(string: "\(baseURL)/\(dogId)/modeSwitch") else { throw URLError(.badURL) }
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-        
-        let body: [String: Any] = ["mode": mode.rawValue]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        print("📦 Request:", body)
-        
-        // Send the HTTP request and wait for the response
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        // Validate the HTTP response
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
+
+        let encoder = JSONCoder.encoder()
+        request.httpBody = try encoder.encode(ModeSwitchRequestDTO(mode: mode.rawValue))
+
+        let (data, resp) = try await URLSession.shared.data(for: request)
+        guard let http = resp as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+
+        let decoder = JSONCoder.decoder()
+        if (200..<300).contains(http.statusCode) {
+            let payload = try decoder.decode(ModeSwitchResponse.self, from: data)
+            return payload.dog
+        } else {
+            if let err = try? decoder.decode(ErrorResponse.self, from: data) {
+                throw NSError(domain: "DogModeService", code: http.statusCode,
+                              userInfo: [NSLocalizedDescriptionKey: err.error])
+            }
             throw URLError(.badServerResponse)
         }
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let responseData = try decoder.decode(ModeSwitchResponse.self, from: data)
-        print("✅ Mode switch successful: \(responseData.message)")
-        return responseData.dog
     }
-    
-    // MARK: - Update Social Dog Data (Behavior/Neutered Status)
+
+    // MARK: - Update Social Dog Data
     func updateSocialDogData(
         dogId: String,
         isNeutered: Bool? = nil,
         behavior: DogBehavior? = nil,
         authToken: String
     ) async throws -> DogModel {
-        guard let url = URL(string: "\(baseURL)/\(dogId)/behavior") else {
-            throw URLError(.badURL)
-        }
-        
+        guard let url = URL(string: "\(baseURL)/\(dogId)/behavior") else { throw URLError(.badURL) }
+
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-        
-        // Prepare request body using dictionary (following the backend structure)
-        var body: [String: Any] = [:]
-        
-        if let isNeutered = isNeutered {
-            body["isNeutered"] = isNeutered
-        }
-        
-        if let behavior = behavior {
-            // Convert behavior to dictionary
-            let encoder = JSONEncoder()
-            let behaviorData = try encoder.encode(behavior)
-            if let behaviorDict = try JSONSerialization.jsonObject(with: behaviorData) as? [String: Any] {
-                body["behavior"] = behaviorDict
+
+        let encoder = JSONCoder.encoder()
+        request.httpBody = try encoder.encode(
+            SocialDogDataUpdateDTO(isNeutered: isNeutered, behavior: behavior)
+        )
+
+        let (data, resp) = try await URLSession.shared.data(for: request)
+        guard let http = resp as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+
+        let decoder = JSONCoder.decoder()
+        if http.statusCode == 200 {
+            let payload = try decoder.decode(SocialDataUpdateResponse.self, from: data)
+            return payload.dog
+        } else {
+            if let err = try? decoder.decode(ErrorResponse.self, from: data) {
+                throw NSError(domain: "DogModeService", code: http.statusCode,
+                              userInfo: [NSLocalizedDescriptionKey: err.error])
             }
-        }
-        
-        // Encode the body as JSON
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        print("📦 Social Dog Data Update Request:", body)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
             throw URLError(.badServerResponse)
         }
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        
-        // Parse the response which contains message and dog
-        let responseData = try decoder.decode(SocialDataUpdateResponse.self, from: data)
-        print("✅ Social dog data update successful: \(responseData.message)")
-        return responseData.dog
     }
-
 }
 
 // MARK: - Response Models
@@ -156,6 +127,20 @@ struct ModeSwitchResponse: Codable {
 struct SocialDataUpdateResponse: Codable {
     let message: String
     let dog: DogModel
+}
+
+private struct VaccinationUpdateDTO: Codable {
+    let coreVaccination1Date: Date?
+    let coreVaccination2Date: Date?
+}
+
+private struct ModeSwitchRequestDTO: Codable {
+    let mode: String
+}
+
+private struct SocialDogDataUpdateDTO: Codable {
+    let isNeutered: Bool?
+    let behavior: DogBehavior?
 }
 
 struct ErrorResponse: Codable {

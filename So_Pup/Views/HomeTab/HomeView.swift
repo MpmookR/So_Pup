@@ -13,21 +13,23 @@ struct HomeView: View {
     @State private var showFilterSheet = false                  // controls filter sheet presentation
     @State private var filterSettings = DogFilterSettings()     // local copy of filter settings
     @State private var selectedProfile: MatchProfile? = nil     // track selected profile for navigation
-    
+    @State private var showRetry = false                        // show a retry button when first load fails / returns empty
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+
     @EnvironmentObject var matchRequestVM: MatchRequestViewModel
     @EnvironmentObject var matchingVM: MatchingViewModel
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.white.ignoresSafeArea()
-                
+
+                //  Pull-to-refresh to re-run scoring without killing the app
                 ScrollView {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        
+
                         // MARK: - Top Banner
                         Image("banner2")
                             .resizable()
@@ -36,7 +38,7 @@ struct HomeView: View {
                             .frame(maxWidth: .infinity)
                             .clipped()
                             .ignoresSafeArea(edges: .top)
-                        
+
                         // MARK: - Sticky Filter Bar
                         Section(
                             header:
@@ -53,7 +55,7 @@ struct HomeView: View {
                                 .zIndex(1) // keep header above content
                         ) {
                             // MARK: - Match State Handling
-                            
+
                             if matchingVM.isLoading {
                                 // Loading spinner while matches are being fetched
                                 VStack(spacing: 12) {
@@ -63,24 +65,9 @@ struct HomeView: View {
                                 }
                                 .padding(.top, 56)
                             }
-                            else if matchingVM.matchedProfiles.isEmpty && matchingVM.hasLoadedOnce {
-                                // Empty state after data has loaded at least once
-                                VStack(alignment: .center) {
-                                    Text("No matches found 🐾")
-                                        .fontWeight(.bold)
-                                        .foregroundColor(Color.socialText)
-                                        .font(.title3)
-                                    Text("Try expanding the distance or changing preferences")
-                                        .fontWeight(.light)
-                                        .foregroundColor(Color.socialText)
-                                        .font(.body)
-                                        .multilineTextAlignment(.center)
-                                }
-                                .padding(.top, 56)
-                                .padding(.horizontal)
-                            }
-                            else if let viewerCoordinate = matchingVM.userCoordinate {
-                                // Show match list if profiles exist
+                            else if let viewerCoordinate = matchingVM.userCoordinate,
+                                    !matchingVM.matchedProfiles.isEmpty {
+                                // Prefer positive path first: show list when we have items + coordinate
                                 ForEach(matchingVM.matchedProfiles, id: \.dog.id) { profile in
                                     Button { selectedProfile = profile } label: {
                                         ProfileMatchCard(
@@ -94,8 +81,31 @@ struct HomeView: View {
                                     .padding(.top, 16)
                                 }
                             }
+                            else if matchingVM.hasLoadedOnce {
+                                // Empty/error state after data has loaded at least once
+                                VStack(spacing: 12) {
+                                    Text("No matches found 🐾")
+                                        .font(.title3).fontWeight(.bold)
+                                        .foregroundColor(Color.socialText)
+                                    Text("Try expanding the distance or changing preferences.")
+                                        .foregroundColor(.gray)
+                                        .multilineTextAlignment(.center)
+
+                                    // One-tap retry covers token refresh / cold start / location race
+                                    Button {
+                                        Task {
+                                            await matchingVM.applyScoring(using: filterSettings)
+                                        }
+                                    } label: {
+                                        Text("Retry search")
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                                .padding(.top, 56)
+                                .padding(.horizontal)
+                            }
                             else {
-                                // Waiting for user’s location
+                                // Waiting for user’s location (first launch)
                                 VStack(spacing: 12) {
                                     ProgressView().controlSize(.regular)
                                     Text("Fetching your location…")
@@ -105,6 +115,10 @@ struct HomeView: View {
                             }
                         }
                     }
+                }
+                //  Native pull-to-refresh to re-run with current filters
+                .refreshable {
+                    await matchingVM.applyScoring(using: filterSettings)
                 }
             }
             // MARK: - Navigation to FullDogDetailsView
@@ -121,7 +135,7 @@ struct HomeView: View {
                     )
                 }
             }
-            
+
             // MARK: - Filter Sheet
             .sheet(isPresented: $showFilterSheet) {
                 FilterDetailSheet(
@@ -129,8 +143,11 @@ struct HomeView: View {
                     onDismiss: {
                         showFilterSheet = false
                         filterService.saveFilterSettings(filterSettings)
+                        // Re-run scoring when filters are dismissed (keeps view in sync)
+                        Task { await matchingVM.applyScoring(using: filterSettings) }
                     },
                     onApply: { scoredDogs in
+                        // Keeps instant feedback when the sheet runs local scoring
                         matchingVM.updateScoredMatches(scoredDogs)
                     },
                     currentDog: matchingVM.currentDog,
@@ -139,21 +156,25 @@ struct HomeView: View {
                 )
                 .background(Color.white)
             }
-            
+
             // MARK: - Load and Initialize Matching Data
             .task {
                 let savedFilter = filterService.loadFilterSettings()
                 filterSettings = savedFilter
-                if !matchingVM.hasLoadedOnce || matchingVM.filterSettings != savedFilter {
+
+                // Avoid duplicate work if a load is already in progress
+                if !matchingVM.isLoading,
+                   (!matchingVM.hasLoadedOnce || matchingVM.filterSettings != savedFilter) {
                     await matchingVM.initialize(with: savedFilter)
-                }            }
-            
+                }
+            }
+
             // Smooth animation between loading/empty/match states
             .animation(.easeInOut, value: matchingVM.isLoading)
             .animation(.easeInOut, value: matchingVM.matchedProfiles.count)
         }
     }
-    
+
     private var filterService: DogFilterStorageService {
         DogFilterStorageService(context: modelContext)
     }
