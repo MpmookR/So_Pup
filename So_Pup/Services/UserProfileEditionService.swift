@@ -1,79 +1,55 @@
 import Foundation
 import FirebaseAuth
 
+//
+//  - Wrap all /profile endpoints for updating users & dogs
+//  - Use unified JSONCoder (tolerant ISO-8601 with/without ms) for both
+//    encoding and decoding to avoid iOS 18 date edge cases.
+//  - Omit nil fields automatically (DTOs with Optionals) so the backend
+//    receives only fields the user actually changed.
+//
+
 // MARK: - User Profile Edition Service
 // Handles API requests for updating user and dog profiles
 // Aligns with the backend /profile controller endpoints
 final class UserProfileEditionService {
     static let shared = UserProfileEditionService()
-    private let baseURL = "https://api-2z4snw37ba-uc.a.run.app/profile"
+
+    private let baseURL = URL(string: "https://api-2z4snw37ba-uc.a.run.app/profile")!
     private init() {}
 
-    // Shared formatters
-    private static let iso: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
-    }()
-
-    // MARK: - User Profile Updates
+    // MARK: - Public: User Profile Updates
 
     /// Update user profile (name, bio, location, etc.)
     /// Endpoint: PUT /profile/user/:userId
-    // Replace your existing updateUserProfile(...) with this version
     func updateUserProfile(
         userId: String,
         name: String? = nil,
         bio: String? = nil,
         location: String? = nil,
         coordinate: Coordinate? = nil,
-        languages: [String]? = nil,     
+        languages: [String]? = nil,
         customLanguage: String? = nil,
         imageURL: String? = nil
     ) async throws -> UserModel {
-        guard let user = Auth.auth().currentUser else {
-            throw ProfileEditionError.notAuthenticated
-        }
+        // Build DTO with only the changed fields (Optionals -> omitted when nil)
+        let body = UserUpdateDTO(
+            name: name,
+            bio: bio,
+            location: location,
+            coordinate: coordinate.map { .init(latitude: $0.latitude, longitude: $0.longitude) },
+            languages: languages,
+            customLanguage: customLanguage,
+            imageURL: imageURL
+        )
 
-        let token = try await user.getIDToken()
-        let url = URL(string: "\(baseURL)/user/\(userId)")!
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Declare requestBody, then fill it
-        var requestBody: [String: Any] = [:]
-        if let name = name { requestBody["name"] = name }
-        if let bio = bio { requestBody["bio"] = bio }
-        if let location = location { requestBody["location"] = location }
-        if let coordinate = coordinate { requestBody["coordinate"] = coordinate.asJSON }
-        if let languages = languages { requestBody["languages"] = languages }
-        if let customLanguage = customLanguage { requestBody["customLanguage"] = customLanguage }
-        if let imageURL = imageURL { requestBody["imageURL"] = imageURL }
-
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ProfileEditionError.invalidResponse
-        }
-
-        if (200..<300).contains(httpResponse.statusCode) {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let response = try decoder.decode(UserProfileUpdateResponse.self, from: data)
-            return response.user
-        } else {
-            let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data)
-            throw ProfileEditionError.apiError(errorResponse?.error ?? "Unknown error")
-        }
+        // Execute request and decode typed response
+        let data = try await send(path: "/user/\(userId)", method: "PUT", body: body)
+        let resp = try JSONCoder.decoder().decode(UserProfileUpdateResponse.self, from: data)
+        return resp.user
     }
 
-
-    // MARK: - Dog Profile Updates
+    // MARK: - Public: Dog Profile Updates
 
     /// Update dog basic profile (name, dob, breed, weight, etc.)
     /// Endpoint: PUT /profile/dog/:dogId/basic
@@ -88,24 +64,19 @@ final class UserProfileEditionService {
         bio: String? = nil,
         coordinate: Coordinate? = nil
     ) async throws -> DogModel {
-        var body: [String: Any] = [:]
-        if let name { body["name"] = name }
-        if let dob { body["dob"] = Self.iso.string(from: dob) }
-        if let breed { body["breed"] = breed }
-        if let weight { body["weight"] = weight }
-        if let gender { body["gender"] = gender.rawValue }
-        if let size { body["size"] = size.rawValue }
-        if let bio { body["bio"] = bio }
-        if let coordinate { body["coordinate"] = coordinate.asJSON } 
-
-        let data = try await send(
-            path: "/dog/\(dogId)/basic",
-            method: "PUT",
-            jsonBody: body
+        let body = DogBasicUpdateDTO(
+            name: name,
+            dob: dob,
+            breed: breed,
+            weight: weight,
+            gender: gender?.rawValue,
+            size: size?.rawValue,
+            bio: bio,
+            coordinate: coordinate.map { .init(latitude: $0.latitude, longitude: $0.longitude) }
         )
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(DogProfileUpdateResponse.self, from: data).dog
+
+        let data = try await send(path: "/dog/\(dogId)/basic", method: "PUT", body: body)
+        return try JSONCoder.decoder().decode(DogProfileUpdateResponse.self, from: data).dog
     }
 
     /// Update dog behavior profile (behavior, neutered status only)
@@ -115,43 +86,23 @@ final class UserProfileEditionService {
         isNeutered: Bool? = nil,
         behavior: DogBehavior? = nil
     ) async throws -> DogModel {
-        var body: [String: Any] = [:]
-        if let isNeutered { body["isNeutered"] = isNeutered }
-        if let behavior {
-            let enc = JSONEncoder()
-            enc.dateEncodingStrategy = .iso8601
-            let behaviorData = try enc.encode(behavior)
-            if let dict = try JSONSerialization.jsonObject(with: behaviorData) as? [String: Any] {
-                body["behavior"] = dict
-            }
-        }
-
-        let data = try await send(
-            path: "/dog/\(dogId)/behavior",
-            method: "PUT",
-            jsonBody: body
-        )
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(DogBehaviorUpdateResponse.self, from: data).dog
+        let body = DogBehaviorUpdateDTO(isNeutered: isNeutered, behavior: behavior)
+        let data = try await send(path: "/dog/\(dogId)/behavior", method: "PUT", body: body)
+        return try JSONCoder.decoder().decode(DogBehaviorUpdateResponse.self, from: data).dog
     }
 
     /// Update dog images
     /// Endpoint: PUT /profile/dog/:dogId/images
     func updateDogImages(dogId: String, imageURLs: [String]) async throws -> DogModel {
-        let data = try await send(
-            path: "/dog/\(dogId)/images",
-            method: "PUT",
-            jsonBody: ["imageURLs": imageURLs]
-        )
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(DogImagesUpdateResponse.self, from: data).dog
+        let body = DogImagesUpdateDTO(imageURLs: imageURLs)
+        let data = try await send(path: "/dog/\(dogId)/images", method: "PUT", body: body)
+        return try JSONCoder.decoder().decode(DogImagesUpdateResponse.self, from: data).dog
     }
 
-    // MARK: - Health
-    /// PATCH-like update for health dates. Sends only the fields you pass.
-    /// Backend: PUT /profile/dog/:dogId/health
+    // MARK: - Public: Health
+
+    /// PATCH-like update for health dates. Sends only the fields user pass.
+    /// Endpoint: PUT /profile/dog/:dogId/health
     func updateDogHealth(
         dogId: String,
         fleaTreatmentDate: Date? = nil,
@@ -161,33 +112,24 @@ final class UserProfileEditionService {
         precondition(fleaTreatmentDate != nil || wormingTreatmentDate != nil,
                      "Provide at least one treatment date")
 
-        var body: [String: Any] = [:]
-        if let fleaTreatmentDate {
-            body["fleaTreatmentDate"] = Self.iso.string(from: fleaTreatmentDate)
-        }
-        if let wormingTreatmentDate {
-            body["wormingTreatmentDate"] = Self.iso.string(from: wormingTreatmentDate)
-        }
-
-        let data = try await send(
-            path: "/dog/\(dogId)/health",
-            method: "PUT",
-            jsonBody: body
+        let body = DogHealthUpdateDTO(
+            fleaTreatmentDate: fleaTreatmentDate,
+            wormingTreatmentDate: wormingTreatmentDate
         )
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(DogHealthUpdateResponse.self, from: data).dog
+        let data = try await send(path: "/dog/\(dogId)/health", method: "PUT", body: body)
+        return try JSONCoder.decoder().decode(DogHealthUpdateResponse.self, from: data).dog
     }
-    
-    // MARK: - Core request helper
 
-    private func send(path: String, method: String, jsonBody: [String: Any]) async throws -> Data {
+    // MARK: - Core request helper (Encodable bodies)
+
+    /// Generic sender that encodes any Encodable body with JSONCoder and returns raw Data.
+    private func send<T: Encodable>(path: String, method: String, body: T) async throws -> Data {
+        // Ensure authenticated and fetch fresh ID token
         guard let user = Auth.auth().currentUser else { throw ProfileEditionError.notAuthenticated }
         let token = try await user.getIDToken()
 
-        guard let url = URL(string: baseURL + path) else { throw ProfileEditionError.invalidResponse }
-
+        let url = baseURL.appendingPathComponent(path)
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.cachePolicy = .reloadIgnoringLocalCacheData
@@ -195,27 +137,69 @@ final class UserProfileEditionService {
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        req.httpBody = try JSONSerialization.data(withJSONObject: jsonBody)
+
+        // Encode via JSONCoder (ISO8601 tolerant, omits nils)
+        req.httpBody = try JSONCoder.encoder().encode(body)
 
         let (data, resp) = try await URLSession.shared.data(for: req)
         guard let http = resp as? HTTPURLResponse else { throw ProfileEditionError.invalidResponse }
 
-        // Accept 200..299 as success
+        // Success: 2xx
         guard (200..<300).contains(http.statusCode) else {
-            let msg = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw ProfileEditionError.apiError("HTTP \(http.statusCode): \(msg)")
+            // Try to surface typed error if backend returned JSON
+            if let err = try? JSONCoder.decoder().decode(ErrorResponse.self, from: data) {
+                throw ProfileEditionError.apiError(err.error)
+            }
+            let snippet = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw ProfileEditionError.apiError("HTTP \(http.statusCode): \(snippet)")
         }
         return data
     }
 }
 
-// MARK: - Helpers
+// MARK: - Request DTOs (Encodable, omit nils)
 
-extension Coordinate {
-    var asJSON: [String: Any] { ["latitude": latitude, "longitude": longitude] }
+private struct CoordinateDTO: Codable {
+    let latitude: Double
+    let longitude: Double
 }
 
-// MARK: - Response Models
+private struct UserUpdateDTO: Codable {
+    var name: String?
+    var bio: String?
+    var location: String?
+    var coordinate: CoordinateDTO?
+    var languages: [String]?
+    var customLanguage: String?
+    var imageURL: String?
+}
+
+private struct DogBasicUpdateDTO: Codable {
+    var name: String?
+    var dob: Date?
+    var breed: String?
+    var weight: Double?
+    var gender: String?
+    var size: String?
+    var bio: String?
+    var coordinate: CoordinateDTO?
+}
+
+private struct DogBehaviorUpdateDTO: Codable {
+    var isNeutered: Bool?
+    var behavior: DogBehavior?
+}
+
+private struct DogImagesUpdateDTO: Codable {
+    let imageURLs: [String]
+}
+
+private struct DogHealthUpdateDTO: Codable {
+    var fleaTreatmentDate: Date?
+    var wormingTreatmentDate: Date?
+}
+
+// MARK: - Response Models (unchanged)
 
 struct UserProfileUpdateResponse: Codable {
     let message: String
@@ -242,8 +226,8 @@ struct DogHealthUpdateResponse: Codable {
     let dog: DogModel
 }
 
-
 // MARK: - Errors
+
 enum ProfileEditionError: Error, LocalizedError {
     case notAuthenticated
     case invalidResponse

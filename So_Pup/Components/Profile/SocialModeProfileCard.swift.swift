@@ -38,19 +38,19 @@ struct SocialProfileSection: View {
                     .font(.title3).fontWeight(.semibold)
                     .foregroundColor(Color.socialText)
                 Spacer()
-                Button {
-                    // TODO: present edit sheet for basic dog profile (wire to dogEditorVM.saveBasic())
-                    print("Edit dog profile tapped")
-                } label: {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color.socialText)
-                        .frame(width: 28, height: 28)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                }
-            }
+                
+                ComingSoonPill()
+
+                //                Button(action: {}) {
+                //                    Image(systemName: "pencil")
+                //                        .font(.system(size: 14, weight: .medium))
+                //                        .foregroundColor(Color.socialText)
+                //                        .frame(width: 28, height: 28)
+                //                        .background(Color.socialLight)
+                //                        .clipShape(Circle())
+                //                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+//            }
+        }
 
             HStack(spacing: 16) {
                 AsyncImage(url: URL(string: dog.imageURLs.first ?? "")) { img in
@@ -113,18 +113,20 @@ struct BehaviorSection: View {
                     .font(.title3).fontWeight(.semibold)
                     .foregroundColor(Color.socialText)
                 Spacer()
-                Button {
-                    // TODO: present edit behaviour sheet, then call dogEditorVM.saveBehavior()
-                    print("Edit behavior tapped")
-                } label: {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color.socialText)
-                        .frame(width: 28, height: 28)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                }
+                
+                ComingSoonPill()
+
+//                Button {
+//                    print("Edit behavior tapped")
+//                } label: {
+//                    Image(systemName: "pencil")
+//                        .font(.system(size: 14, weight: .medium))
+//                        .foregroundColor(Color.socialText)
+//                        .frame(width: 28, height: 28)
+//                        .background(Color.white)
+//                        .clipShape(Circle())
+//                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+//                }
             }
 
             VStack(alignment: .leading, spacing: 16) {

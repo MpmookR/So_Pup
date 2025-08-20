@@ -53,15 +53,17 @@ struct UserProfileCard: View {
             Spacer()
             
             // Edit Button
-            Button(action: { showEditProfile = true }) {
-                Image(systemName: "pencil")
-                    .font(.title3)
-                    .foregroundColor(Color.socialText)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-            }
+            ComingSoonPill()
+
+//            Button(action: { showEditProfile = true }) {
+//                Image(systemName: "pencil")
+//                    .font(.title3)
+//                    .foregroundColor(Color.socialText)
+//                    .frame(width: 40, height: 40)
+//                    .background(Color.white)
+//                    .clipShape(Circle())
+//                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+//            }
         }
         .padding(16)
         .background(dogMode == .puppy ? Color.puppyAccent : Color.socialAccent)

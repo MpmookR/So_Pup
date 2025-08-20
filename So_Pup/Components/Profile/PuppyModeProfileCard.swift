@@ -21,6 +21,7 @@ struct PuppyModeContent: View {
 
 // MARK: - Puppy Profile Section
 struct PuppyProfileSection: View {
+    @State private var showComingSoon = false
     let dog: DogModel
     
     var body: some View {
@@ -33,15 +34,16 @@ struct PuppyProfileSection: View {
                 
                 Spacer()
                 
-                Button(action: {}) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color.socialText)
-                        .frame(width: 28, height: 28)
-                        .background(Color.socialLight)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                }
+                ComingSoonPill()
+//                Button(action: {}) {
+//                    Image(systemName: "pencil")
+//                        .font(.system(size: 14, weight: .medium))
+//                        .foregroundColor(Color.socialText)
+//                        .frame(width: 28, height: 28)
+//                        .background(Color.socialLight)
+//                        .clipShape(Circle())
+//                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+//                }
             }
             
             HStack(spacing: 16) {
