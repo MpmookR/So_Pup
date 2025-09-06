@@ -1,3 +1,24 @@
+// -------------------
+//  Centralised manager for push notification handling, bridging Apple’s
+//  UNUserNotificationCenter with Firebase Cloud Messaging (FCM).
+//  Implements singleton pattern for global access and exposes the current
+//  FCM token as an observable property.
+//
+//  Key Responsibilities:
+//  - Request and register for push notification permissions with iOS
+//  - Manage FCM registration tokens and publish updates
+//  - Integrate with UNUserNotificationCenterDelegate and MessagingDelegate
+//  - Provide async retrieval of the current FCM token
+//
+//  Published Properties:
+//  - pushToken: Latest FCM token issued by Firebase
+//
+//  Usage:
+//  - Call `PushManager.shared.setupPush()` at app launch to request
+//    permissions and register for notifications.
+//  - Observe `pushToken` in SwiftUI for updates when Firebase refreshes it.
+//  - Use `getFCMToken()` to fetch the token on demand.
+// -------------------
 import FirebaseMessaging
 import UIKit
 import UserNotifications

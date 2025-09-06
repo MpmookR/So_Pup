@@ -1,3 +1,20 @@
+// -------------------
+//  Service for real-time chat message updates using Firestore snapshot listeners.
+//  Exposes messages as a published property for SwiftUI views to observe.
+//
+//  Key Responsibilities:
+//  - Attach a Firestore snapshot listener to a chat room’s messages collection
+//  - Decode documents into `Message` models and publish updates automatically
+//  - Handle error states and empty snapshots gracefully
+//  - Stop listening and clean up Firestore listener when no longer needed
+//
+//  Published Properties:
+//  - messages: The latest list of decoded chat messages for the active chat room
+//
+//  Usage:
+//  Call `listenToMessages(chatRoomId:)` to begin streaming updates for a room,
+//  and `stopListening()` when leaving the chat to avoid memory leaks.
+// -------------------
 import FirebaseFirestore
 
 // for real time message updating

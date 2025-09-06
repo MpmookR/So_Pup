@@ -1,3 +1,30 @@
+/// -------------------
+/// An `ObservableObject` responsible for fetching user/dog data,
+/// applying matchmaking filters, and updating the list of matched profiles.
+///
+/// Responsibilities:
+/// - Manages and caches all dogs and users fetched from Firestore.
+/// - Tracks the viewer’s current location via `LocationService`.
+/// - Applies scoring (via `MatchScoringService`) to candidate dogs based on:
+///   `Current user’s dog profile`
+///   `Distance from user’s coordinate
+///   `Active filter settings
+///   `Exclusions from MatchRequestViewModel `(pending/ongoing requests)
+/// - Exposes published state for SwiftUI views:
+///   • `matchedProfiles`: Scored and filtered matches to display
+///   • `isLoading` / `hasLoadedOnce`: Used to control UI loading indicators
+///   • `filterSettings`: Current active matchmaking filter
+///
+/// Dependency Injection:
+/// - Requires a `MatchRequestViewModel` at init, to ensure scoring
+///   excludes dogs already involved in match requests.
+///
+/// Usage:
+/// Call `initialize(with:)` on first load or `load()` for default filters
+/// to fetch data, location, and compute matches. UI subscribes to
+/// `@Published` properties to react to updates automatically.
+/// -------------------
+
 import CoreLocation
 import FirebaseFirestore
 import FirebaseAuth
@@ -25,6 +52,7 @@ final class MatchingViewModel: ObservableObject {
     private var allUsers: [UserModel] = []
 
     // MARK: - Init
+    /// Dependency injection
     init(matchRequestVM: MatchRequestViewModel) {
         self.matchRequestVM = matchRequestVM
     }
@@ -124,7 +152,8 @@ final class MatchingViewModel: ObservableObject {
         let b = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         return a.distance(from: b)
     }
-
+    
+    // help around any async task to manage the loading state consistently
     private func runLoadingBlock(_ op: () async -> Void) async {
         isLoading = true
         defer { isLoading = false; hasLoadedOnce = true }

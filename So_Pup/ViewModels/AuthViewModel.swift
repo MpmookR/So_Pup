@@ -1,3 +1,23 @@
+/// --------------
+/// Observable auth (runs on main actor).
+/// Responsibilities:
+/// - Maintains UI-facing auth state: email/password, loading/error flags, session status,
+///   onboarding completion, and a transient “checking status” gate.
+/// - Performs sign-in/up via `FirebaseService` (email/password, Apple, Google) and exposes
+///   `signOut()`.
+/// - On init, verifies the current Firebase session and (if present) fetches an ID token
+///   and the user's onboarding status from Firestore.
+/// - Provides `fetchIDToken()` for callers that need a fresh Firebase ID token.
+///
+/// Key collaborations:
+/// • Uses `FirebaseService` for all auth flows (credential handling, provider logins).
+/// • Uses Firebase `Auth` to read the current user (UID) and `Firestore` to read
+///   `hasCompletedOnboarding`.
+///
+/// UI notes:
+/// • `@Published` properties drive navigation between Login --> Onboarding --> App.
+/// • `isCheckingAuthStatus` guards initial routing while async checks complete.
+/// --------------
 import Foundation
 import UIKit
 import FirebaseAuth

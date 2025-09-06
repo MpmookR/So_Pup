@@ -1,3 +1,21 @@
+//
+//  Logged-in root shell of the app. Provides a four-tab layout
+//  (Home, Match, Chat, Profile) and injects a GlobalRouter to coordinate
+//  navigation events across tabs.
+//
+//  Key Responsibilities:
+//  - Render the main TabView once the user is authenticated and onboarded
+//  - Share a single GlobalRouter across all tabs
+//  - Automatically switch to the Chat tab when a new chat room is created
+//
+//  State / Env:
+//  - selectedTabIndex (@State): current tab index
+//  - authViewModel, chatVM, matchRequestVM from environment
+//  - router (@StateObject): global navigation coordinator
+//
+//  Usage:
+//  Used only from RootView once login + onboarding are complete.
+//
 import SwiftUI
 
 struct MainTabView: View {
@@ -28,13 +46,14 @@ struct MainTabView: View {
                 .tag(3)
         }
         .tint(Color.socialAccent)
-        .environmentObject(router) // only router is created here
+        .environmentObject(router) // router created here and shared app-wide
 
-        // Flip to Chat tab when a room is created
+        // Navigate to Chat tab automatically when a new chat room is created
+        // after a match request is accepted, MatchRequestVM sets pendingChatRoomId
         .onChange(of: matchRequestVM.pendingChatRoomId, initial: false) { _, newChatId in
             guard let id = newChatId else { return }
-            router.pendingChatRoomId = id
-            selectedTabIndex = 2
+            router.pendingChatRoomId = id   // pass navigation request into global router
+            selectedTabIndex = 2            // switch visible tab to Chat
         }
     }
 }

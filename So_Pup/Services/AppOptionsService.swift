@@ -1,3 +1,18 @@
+// -------------------
+//  Service responsible for loading and providing application-wide configuration
+//  options from Firestore (`config/Options` document). Implements a singleton
+//  pattern for global access and exposes its state as an `ObservableObject`
+//  for SwiftUI views.
+//
+//  Key Responsibilities:
+//  - Fetches and decodes the `AppOptions` document from Firestore
+//  - Publishes the latest options to SwiftUI views
+//  - Tracks loading and error state during fetch operations
+//
+//  Usage:
+//  Access via `AppOptionsService.shared` and observe in SwiftUI views to
+//  automatically react to changes in configuration.
+// -------------------
 import Foundation
 import FirebaseFirestore
 
@@ -31,16 +46,11 @@ class AppOptionsService: ObservableObject {
                 return
             }
 
-//            print(" Document data: \(data)")
 
             let jsonData = try JSONSerialization.data(withJSONObject: data, options: [])
             var decoded = try JSONDecoder().decode(AppOptions.self, from: jsonData)
             print("✅ Decoded base options")
 
-//            let breeds = try await DogBreedFirestoreService.fetchBreeds()
-//            print("✅ Breeds fetched: \(breeds.count)")
-//
-//            decoded.dogBreeds = breeds
             self.options = decoded
 //
             print("✅ AppOptions fully loaded")

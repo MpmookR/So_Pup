@@ -1,3 +1,22 @@
+/// --------------------
+/// Compose-box view model for sending chat messages (main actor).
+///
+/// Responsibilities
+/// - Holds draft text, sending/error flags, and the addressable context (room/user/dog IDs).
+/// - Configures sending context from a `ChatRoom` or via explicit IDs.
+/// - Validates readiness via `canSend` and serialises sends with `isSending`.
+/// - Obtains a fresh Firebase ID token from `AuthViewModel` and calls `ChatService.sendMessage(...)`.
+///
+/// Key collaborators
+/// - `AuthViewModel` --> `fetchIDToken()` for backend auth.
+/// - `ChatService` --> message delivery to the backend.
+/// - `ChatRoom` -->  convenience for resolving the other user/dog IDs.
+///
+/// Usage
+/// 1) Initialise with `AuthViewModel`.
+/// 2) Call `setContext(...)` (from room or explicit IDs).
+/// 3) Bind `draft` to the input field; call `await send()` on submit.
+/// --------------------
 import Foundation
 
 @MainActor

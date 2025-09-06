@@ -1,3 +1,19 @@
+//
+//  Main application entry point. Configures Firebase, sets up global
+//  view models and services, and injects them into the environment.
+//
+//  Key Responsibilities:
+//  - Configure Firebase SDKs and push notifications
+//  - Construct all root-level view models (Auth, Match, Chat, Meetup, Review)
+//    and pass shared dependencies (e.g. AuthViewModel)
+//  - Provide a GlobalRouter for navigation coordination across tabs
+//  - Provide an AppReloadBus for triggering app-wide refreshes
+//  - Kick off initial tasks (auth check, options fetch, dog ID load)
+//  - Listen to reloadBus events and re-fetch core data sets
+//
+//  Usage:
+//  Declared with @main, this struct is the true entrypoint for the iOS app.
+//
 import SwiftUI
 import FirebaseCore
 import FirebaseStorage
@@ -48,6 +64,7 @@ struct SoPupApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+            // Inject global environment objects
                 .environmentObject(authViewModel)
                 .environmentObject(onboardingViewModel)
                 .environmentObject(appOptionsService)
@@ -58,18 +75,23 @@ struct SoPupApp: App {
                 .environmentObject(reviewVM)
                 .environmentObject(reloadBus)
                 .modelContainer(for: DogFilterSettingsModel.self)
+            // Initial tasks: auth check, config fetch, dog ID
                 .task {
                     await authViewModel.checkAuthStatus()
                     await appOptionsService.fetchOptions()
                     await matchRequestVM.loadCurrentDogId()
                 }
-            // central place to re-fetch when a reload is requested
+            // Global reload handling:
+            // When `reloadBus.reload()` is called anywhere in the app, it updates `tick`
+            // That triggers this `.onReceive`, which in turn re-fetches data in the core
+            // view models. Their @Published properties update, and SwiftUI automatically
+            // refreshes any views that depend on them.
                 .onReceive(reloadBus.$tick) { _ in
                     Task {
                         // Kick the key VMs so UI updates everywhere
-                        await matchingVM.load()
-                        await matchRequestVM.fetchMatchRequests()
-                        await meetupVM.loadUserMeetups()
+                        await matchingVM.load()                     // reloads the list of match candidates
+                        await matchRequestVM.fetchMatchRequests()   // reloads pending match requests
+                        await meetupVM.loadUserMeetups()            // reloads user meetups
                     }
                 }
         }

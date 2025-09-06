@@ -14,7 +14,6 @@ struct AppOptions: Codable {
     var SizeOption: [String]
     var triggerSensitivityOptions: [String]
     
-//    var dogBreeds: [String] = []  // Will be injected post-fetch
 }
 
 // Used at runtime to populate: Pickers, Multi-select views, Dynamic form choices

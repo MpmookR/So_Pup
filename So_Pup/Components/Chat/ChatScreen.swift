@@ -76,6 +76,9 @@ struct ChatScreen: View {
                 receiverDogName: dog.displayName
             )
         }
+        // Start the Firestore snapshot listener for this room when the view appears
+        // This streams new/edited messages in real time - pair with `.onDisappear { messageService.stopListening() }`
+        // to detach the listener and avoid leaks/battery/network usage
         .onAppear { messageService.listenToMessages(chatRoomId: room.id) }
         .onDisappear { messageService.stopListening() }
         .onTapGesture { hideKeyboard() }
@@ -93,7 +96,6 @@ struct ChatScreen: View {
                 }
     }
     // MARK: - Meetup gating
-
     // Allowed only if BOTH dogs are in Social mode.
     private var canCreateMeetup: Bool {
         guard let myDog = matchingVM.currentDog else {

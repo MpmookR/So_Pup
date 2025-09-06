@@ -42,7 +42,6 @@ extension DogFilterSettingsModel {
     
     // turns saved data from SwiftData into a regular struct that the UI understands
     /// use case: Load from database and bind to UI
-    
     func toStruct() -> DogFilterSettings {
         return DogFilterSettings(
             maxDistanceInKm: self.maxDistanceInKm,

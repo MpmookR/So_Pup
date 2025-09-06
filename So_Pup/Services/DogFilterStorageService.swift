@@ -1,3 +1,19 @@
+// -------------------
+//  Service for persisting and retrieving dog filter preferences using SwiftData.
+//  Acts as a lightweight storage layer between the app’s filter settings UI and
+//  the underlying SwiftData models.
+//
+//  Key Responsibilities:
+//  - Load saved filter settings from SwiftData, or provide default values if none exist
+//  - Save or update filter settings in the persistent store
+//  - Convert between `DogFilterSettings` (struct for UI/logic) and
+//    `DogFilterSettingsModel` (SwiftData entity)
+//
+//  Usage:
+//  Initialize with a `ModelContext` and call `loadFilterSettings()`
+//  to retrieve the user’s last saved filters, or `saveFilterSettings(_:)`
+//  to persist updated preferences.
+// -------------------
 import Foundation
 import SwiftData
 

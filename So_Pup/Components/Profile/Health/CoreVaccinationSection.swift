@@ -70,8 +70,6 @@ struct CoreVaccinationSection: View {
                     }
                 }
             }
-            
-
         }
         .padding(16)
         .background(Color.puppyLight)

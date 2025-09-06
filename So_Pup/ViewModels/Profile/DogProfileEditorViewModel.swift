@@ -174,7 +174,7 @@ final class DogProfileEditorViewModel: ObservableObject {
         }
     }
     // MARK: Health
-
+    // only use this function on this VM
     func setHealthDates(flea: Date?, worming: Date?) async {
         guard flea != nil || worming != nil else {
             popError("Provide at least one treatment date.", nil)

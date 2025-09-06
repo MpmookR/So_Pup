@@ -1,3 +1,19 @@
+/// ------------------------
+/// To manage vaccine updates and switching a dog from Puppy to Social mode.
+///
+/// Responsibilities
+/// - Update vaccination dates and reflect backend responses (dog data + readiness flags).
+/// - Manually switch mode when eligible; update social data (behaviour, neutered).
+/// - Expose UI state: `dog`, `isUpdating`, success/error banners, readiness booleans.
+///
+/// Key collaborators
+/// - `DogModeService` (.shared) --> updateVaccinations / switchDogMode / updateSocialDogData
+/// - Firebase `Auth` -->  fetch ID token via `Auth.auth().currentUser?.getIDToken()`
+///
+/// UI notes
+/// - Call the public methods from views; bind to `@Published` for instant UI updates.
+/// - Optional callbacks `onModeChangeSuccess` / `onSocialDataUpdated` let the parent refresh.
+/// ------------------------
 import Foundation
 import FirebaseAuth
 import SwiftUI

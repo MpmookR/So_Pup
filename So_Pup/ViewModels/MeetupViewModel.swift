@@ -1,3 +1,22 @@
+/// ----------------
+/// Creating and Managing meet-ups.
+///
+/// Responsibilities
+/// - Creates, updates, cancels, and completes meet-ups via `MeetupService`.
+/// - Loads the current user’s meet-ups (optionally filtered by type/status).
+/// - Resolves current user and primary dog via `ProfileDataService`.
+/// - Surfaces UI state: `userMeetups`, loading flag, and success/error banners.
+///
+/// Key collaborators
+/// - `AuthViewModel` --> provides fresh Firebase ID token for secure API calls.
+/// - `ProfileDataService` -->  reads current user / primary dog id.
+/// - `MeetupService` -->  backend calls (create/update/cancel/complete/fetch).
+/// - Firebase `Auth` -->  reads current Firebase user (UID).
+///
+/// UI notes
+/// - Call the public methods from your views; banners are exposed via `showError`/`showSuccess`
+///   with associated messages. All state changes are published for SwiftUI.
+/// ----------------
 import Foundation
 import FirebaseAuth
 import SwiftUI

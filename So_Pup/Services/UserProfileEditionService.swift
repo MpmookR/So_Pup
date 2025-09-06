@@ -100,7 +100,6 @@ final class UserProfileEditionService {
     }
 
     // MARK: - Public: Health
-
     /// PATCH-like update for health dates. Sends only the fields user pass.
     /// Endpoint: PUT /profile/dog/:dogId/health
     func updateDogHealth(
@@ -122,7 +121,6 @@ final class UserProfileEditionService {
     }
 
     // MARK: - Core request helper (Encodable bodies)
-
     /// Generic sender that encodes any Encodable body with JSONCoder and returns raw Data.
     private func send<T: Encodable>(path: String, method: String, body: T) async throws -> Data {
         // Ensure authenticated and fetch fresh ID token

@@ -1,6 +1,4 @@
-import Foundation
-//
-//
+// -------------------
 //  This helper provides a consistent way to encode and decode dates across the app.
 //  Instead of using `.iso8601` directly in every service, call `JSONCoder.decoder()`
 //  and `JSONCoder.encoder()`.
@@ -18,8 +16,8 @@ import Foundation
 //
 //      let encoder = JSONCoder.encoder()
 //      let body = try encoder.encode(dto)
-//
-//
+// -------------------
+import Foundation
 
 enum JSONCoder {
     static func decoder() -> JSONDecoder {

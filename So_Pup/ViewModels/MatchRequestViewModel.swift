@@ -1,3 +1,17 @@
+/// -------------------
+//  ViewModel responsible for managing match request logic in the SoPup app.
+///  Handles sending, checking, fetching, and updating match requests between dogs,
+///  and exposes state to the UI via published properties. It integrates with
+///  Firebase Authentication for secure user identification and ProfileDataService
+///  for resolving dog and owner information.
+///
+//  Key Responsibilities:
+///  - Send match requests and handle success/failure alerts
+///  - Load the current user's primary dog ID
+///  - Check if a match request already exists between two dogs
+///  - Fetch incoming and outgoing match requests and convert them into card data
+///  - Update match request status (e.g., accepted/declined) and navigate to chat if accepted
+/// -------------------
 import Foundation
 import FirebaseAuth
 

@@ -13,7 +13,6 @@ class FirebaseMediaService {
     static let shared = FirebaseMediaService()
     private init() {}
    
-    /// https://firebase.google.com/docs/storage/ios/upload-files?
     /// Uploads a UIImage to Firebase Storage and returns its download URL
         /// - Parameters:
         ///   - image: The UIImage to upload
@@ -67,10 +66,10 @@ class FirebaseMediaService {
         return urls
     }
 
-
-    func deleteImage(atPath path: String) async throws {
-        let ref = Storage.storage().reference().child(path)
-        try await ref.delete()
-        print("🗑️ Deleted image at: \(path)")
-    }
+//
+//    func deleteImage(atPath path: String) async throws {
+//        let ref = Storage.storage().reference().child(path)
+//        try await ref.delete()
+//        print("🗑️ Deleted image at: \(path)")
+//    }
 }

@@ -1,3 +1,30 @@
+// -------------------
+//  Service for location permissions, current coordinate retrieval, reverse
+//  geocoding, and POI search. Wraps Core Location, CLGeocoder, and MapKit
+//  with async/await, exposing a clean API for SwiftUI.
+//
+//  Key Responsibilities:
+//  - Request “When In Use” authorization and fetch the user’s location
+//  - Reverse-geocode coordinates to city/address strings
+//  - Build an MKMapItem for the current location
+//  - Search places/POIs via MKLocalSearch
+//
+//  Implementation Notes:
+//  - Uses a CheckedContinuation to resume the async request after the first
+//    successful location update (then stops updates).
+//  - Reverse geocoding is performed off the main thread with continuations.
+//  - `authorizationStatus` is checked before starting updates.
+//
+//  Errors:
+//  - LocationError.permissionDenied when authorization is not granted
+//  - Propagates Core Location/MapKit errors from delegate/search paths
+//
+//  Usage:
+//  - Call `requestLocation()` to get (coordinate, city).
+//  - Call `getCurrentLocationMapItem()` for a ready-to-use MKMapItem.
+//  - Call `searchLocations(query:)` for POI results.
+//  - Call `coordinateToAddress(coordinate:)` for a formatted address.
+// -------------------
 import Foundation
 import CoreLocation
 import MapKit

@@ -1,10 +1,32 @@
+/// -------------
+/// Main-actor view model that manages the chat list screen.
+///
+/// Responsibilities
+/// - Maintains raw chat rooms (`chatRooms`) and enriched cards (`chatRoomProfiles`) for UI.
+/// - Starts/stops a Firestore realtime listener for the current user's rooms,
+///   ordered by last message timestamp.
+/// - Performs on-demand sync via `ChatService` (REST/Cloud Functions) to keep the UI aligned
+///   with backend state (e.g., after accepting a match).
+/// - Enriches rooms with dog/owner data using `ProfileDataService` via `ChatCardBuilder`.
+/// - Exposes "NEW" dot logic via `ChatReadState` (last-read timestamps in local storage).
+/// - Manages lifecycle: cancels rebuild tasks and removes Firestore listeners on deinit.
+///
+/// Key collaborators
+/// - `AuthViewModel` → provides fresh ID token for API calls.
+/// - `ProfileDataService` → fetches `UserModel`/`DogModel` for card building.
+/// - `ChatService` → fetch/create chat rooms via backend API.
+/// - Firebase `Auth`/`Firestore` → current UID, snapshot listener, transactions/queries.
+/// - `ChatCardBuilder` → maps `[ChatRoom]` → `[ChatRoomCardData]`.
+/// - `ChatReadState` → local unread state ("NEW" dot).
+///
+/// UI notes
+/// - `@Published` state drives the chat list and its loading/error indicators.
+/// - Call `initializeChatListener()` from `onAppear` to bootstrap the listener and initial data.
+/// -------------
 import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 
-// ViewModel responsible for managing chat rooms list, profiles,
-// and the "NEW" dot state for unread rooms.
-// Uses Firestore realtime updates plus on-demand fetch.
 @MainActor
 final class ChatViewModel: ObservableObject {
     // Published state for UI
@@ -13,16 +35,16 @@ final class ChatViewModel: ObservableObject {
     @Published var isLoading = false                          // Spinner control
     @Published var errorMessage: String? = nil                // Error display
     
-    // Services / dependencies
+    // Services/dependencies
     private let profileService = ProfileDataService()         // For fetching dogs + users
     private let db = Firestore.firestore()
     private let authVM: AuthViewModel                         // For auth token in API calls
     
     // Internal state
     private var listener: ListenerRegistration?               // Firestore listener for rooms
-    private var buildTask: Task<Void, Never>?                  // Task to build cards (cancel on new snapshot)
-    private var currentUserId: String?                         // Cached for filtering
-    private var currentDogId: String?                          // My dog's id, for "other dog" detection
+    private var buildTask: Task<Void, Never>?                 // Task to build cards (cancel on new snapshot)
+    private var currentUserId: String?                        // Cached for filtering
+    private var currentDogId: String?                         // My dog's id, for "other dog" detection
     
     init(authVM: AuthViewModel) {
         self.authVM = authVM

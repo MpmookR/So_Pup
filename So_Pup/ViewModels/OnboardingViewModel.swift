@@ -1,3 +1,21 @@
+/// -------------------
+/// User & dog onboarding:
+/// - Captures profile fields, location, images, and behaviour tags
+/// - Determines mode (puppy/social) from DOB and parses input enums
+/// - Uploads media to Firebase Storage and persists User/Dog to Firestore in a transaction
+/// - Generates geohash from coordinates for geo-queries
+/// - Retrieves FCM token for push notifications
+///
+/// Key collaborators:
+/// - `LocationService` (fetches coordinate/city)
+/// - `FirebaseMediaService` (uploads profile/dog images)
+/// - `PushManager` (gets FCM token)
+/// - Firebase `Auth`/`Firestore` (UID, writes via transaction)
+/// - `GFUtils` (geohash)
+///
+/// Public state is exposed via `@Published` for SwiftUI to react to changes.
+/// -------------------
+
 import Foundation
 import FirebaseFirestore
 import FirebaseCore
@@ -45,7 +63,7 @@ class OnboardingViewModel: ObservableObject {
     
     @Published var dogWeight: Double = 0
     @Published var dogWeightString: String = "" {
-        // didSet runs immediately after a property’s value changes
+        /// didSet runs immediately after a property’s value changes
         /// it wont run during initialization, only when new value assigned
         didSet {
             let sanitized = dogWeightString.replacingOccurrences(of: ",", with: ".")

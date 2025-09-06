@@ -48,7 +48,11 @@ final class DogModeService {
     }
 
     // MARK: - Manual Mode Switch
-    func switchDogMode(dogId: String, mode: DogMode, authToken: String) async throws -> DogModel {
+    func switchDogMode(
+        dogId: String,
+        mode: DogMode,
+        authToken: String
+    ) async throws -> DogModel {
         guard let url = URL(string: "\(baseURL)/\(dogId)/modeSwitch") else { throw URLError(.badURL) }
 
         var request = URLRequest(url: url)

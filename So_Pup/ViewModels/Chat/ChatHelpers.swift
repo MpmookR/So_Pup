@@ -1,21 +1,27 @@
+/// -------------------
+//  Provides utility components for chat functionality in the SoPup app,
+//  including ISO date handling, chat room card construction, and read state
+//  management.
+//
+//  Components:
+///  - ISO: Helper for parsing and formatting ISO8601 date strings, including
+///          fractional seconds support.
+///  - ChatCardBuilder: Asynchronously builds ChatRoomCardData objects from
+///          ChatRoom models by resolving related Dog and User information.
+///          Uses an actor-based cache to ensure thread-safe reuse of fetched
+///          dogs and users.
+///  - ChatReadState: Persists and checks message "read" state per chat room
+///          using UserDefaults. Determines if a room has new/unread messages
+///          and marks rooms as read.
+//
+//  Key Features:
+///  - Thread-safe caching for dogs and users when building chat cards
+///  - Sorting of chat rooms by latest activity (last message or creation date)
+///  - ISO8601 parsing that gracefully handles fractional and non-fractional
+///    timestamps
+///  - Lightweight persistence of last seen timestamps for "NEW" dot indicators
+/// -------------------
 import Foundation
-
-// MARK: - ISO helper
-// MARK: - ISO (fractional seconds) formatter
-enum ISO {
-    static let shared: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
-    }()
-
-    /// Parse ISO8601 string (with/without fractional seconds)
-    static func parse(_ s: String) -> Date? {
-        guard !s.isEmpty else { return nil }
-        if let d = shared.date(from: s) { return d }
-        return ISO8601DateFormatter().date(from: s)
-    }
-}
 
 // MARK: - Card builder (ChatRoom -> ChatRoomCardData)
 // Builds ChatRoomCardData arrays from rooms
@@ -118,5 +124,22 @@ enum ChatReadState {
             // No messages; store now so it won't appear NEW.
             UserDefaults.standard.set(Date(), forKey: k)
         }
+    }
+}
+
+// MARK: - ISO helper
+// MARK: - ISO (fractional seconds) formatter
+enum ISO {
+    static let shared: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    /// Parse ISO8601 string (with/without fractional seconds)
+    static func parse(_ s: String) -> Date? {
+        guard !s.isEmpty else { return nil }
+        if let d = shared.date(from: s) { return d }
+        return ISO8601DateFormatter().date(from: s)
     }
 }

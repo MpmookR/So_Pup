@@ -1,3 +1,18 @@
+//
+//  Top-level entry point of the UI. Decides which flow to show
+//  based on authentication state.
+//
+//  Key Responsibilities:
+//  - Show a loading indicator while checking auth status
+//  - Route logged-out users to RegisterView
+//  - Route logged-in but not onboarded users to OnboardingFlowView
+//  - Route fully onboarded users to MainTabView (the logged-in shell)
+//  - Reset NavigationStack whenever login status changes
+//
+//  Usage:
+//  Place at the root of  SwiftUI App. Must be provided with
+//  AuthViewModel as an @EnvironmentObject.
+//
 import SwiftUI
 
 struct RootView: View {

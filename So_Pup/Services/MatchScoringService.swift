@@ -31,7 +31,7 @@ final class MatchScoringService {
             throw URLError(.userAuthenticationRequired)
         }
 
-        // 2) Request (use your JSONCoder encoder in case dates are present in the body)
+        // 2) Request
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

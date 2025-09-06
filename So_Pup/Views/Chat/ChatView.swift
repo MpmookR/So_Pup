@@ -1,3 +1,17 @@
+// -------------------
+//  Container for the chat area with two tabs: Chats and Meet-Ups.
+//  Wires together ChatViewModel, MeetupViewModel, and routing logic,
+//  and navigates into a specific conversation when requested.
+//
+//  Key Responsibilities:
+//  - Render top tab switcher and the corresponding tab content
+//  - Listen for initial load and router updates to deep-link into a room
+//  - Navigate to ChatDestination and mark rooms read on appear/disappear
+//
+//  Usage:
+//  Provide AuthViewModel, ChatViewModel, MeetupViewModel, and GlobalRouter
+//  in the environment. Pushes ChatDestinationWrapper on selection/deep-link.
+// -------------------
 import SwiftUI
 import FirebaseAuth
 
@@ -48,18 +62,19 @@ struct ChatView: View {
                     onBack: { selectedCard = nil }
                 )
             }
-            // Initial load
+            // Initial load: start Firestore listener once, then check for pending navigation
             .task {
                 guard !hasLoaded else { return }
                 hasLoaded = true
                 await chatVM.initializeChatListener()
                 if let id = router.pendingChatRoomId { tryNavigate(to: id) }
             }
-            // Router updates
+            // Router updates: navigate if a push/deep-link sets a pending chat room ID
             .onChange(of: router.pendingChatRoomId) { _, newValue in
                 if let id = newValue { tryNavigate(to: id) }
             }
-            // VM profile updates — cheap signal
+            // VM profile updates: retry navigation when chatRoomProfiles refresh
+            // (ensures navigation works once the required chat card is loaded)
             .onChange(of: chatVM.chatRoomProfiles.count) { _, _ in
                 if let id = router.pendingChatRoomId { tryNavigate(to: id) }
             }

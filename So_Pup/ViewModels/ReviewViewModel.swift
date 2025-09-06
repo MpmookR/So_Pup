@@ -1,3 +1,20 @@
+/// ----------------
+///
+/// Responsibilities
+/// - Submit a review for a meetup via `ReviewService`.
+/// - Load review stats, plain reviews, and “enhanced” reviews (with dog info).
+/// - Cache per-owner `ReviewStats` and track per-owner loads to avoid duplicate requests.
+/// - Expose UI state (lists, stats, banners, loading).
+///
+/// Key collaborators
+/// - `AuthViewModel` --> fresh Firebase ID token for secure calls.
+/// - `ReviewService` (.shared) --> submit/fetch reviews and stats.
+/// - Firebase `Auth` --> current user presence (UID check).
+///
+/// Notes
+/// - `loadAllReviewData(userId:)` fetches stats, reviews, and enhanced reviews in parallel
+///   via a task group. `loadStatsIfNeeded` is safe for list contexts (no global spinner).
+/// ----------------
 import Foundation
 import FirebaseAuth
 import SwiftUI
