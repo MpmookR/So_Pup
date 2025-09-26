@@ -48,6 +48,8 @@ struct ChatCardBuilder {
         let cache = Cache()                  // <- shared, but synchronized
         var results: [ChatRoomCardData] = []
 
+        /// in the TaskGroup are fetching and writing dogs/users at the same time,
+        /// they don’t corrupt the shared dictionary. Without the actor, it'd risk a data race and a crash
         await withTaskGroup(of: ChatRoomCardData?.self) { group in
             for room in rooms {
                 group.addTask {

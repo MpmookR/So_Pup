@@ -64,7 +64,7 @@ struct SoPupApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-            // Inject global environment objects
+            // Inject global environment objects - give every screen access to shared state
                 .environmentObject(authViewModel)
                 .environmentObject(onboardingViewModel)
                 .environmentObject(appOptionsService)
