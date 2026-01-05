@@ -7,7 +7,7 @@ struct AppleSignInButtonView: View {
 
     
     var body: some View {
-        AuthenticationServices.SignInWithAppleButton(
+        SignInWithAppleButton(
             .continue,
             onRequest: { request in
                 print("Apple Sign In: Request started")
