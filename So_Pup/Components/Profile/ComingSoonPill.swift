@@ -9,7 +9,7 @@ struct ComingSoonPill: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color.socialText)
                 .frame(width: 28, height: 28)
-                .background(.white)
+                .background(Color.white)
                 .clipShape(Circle())
                 .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
         }
@@ -18,6 +18,7 @@ struct ComingSoonPill: View {
         } message: {
             Text("Profile editing isn’t available yet.")
         }
+        .tint(nil)
     }
 }
 

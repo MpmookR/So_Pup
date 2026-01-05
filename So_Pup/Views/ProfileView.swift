@@ -34,6 +34,7 @@ struct ProfileView: View {
         } message: {
             Text("Education Hub will be available soon 🐾")
         }
+        .tint(nil)
         
         // Success (mode switched). After OK, flip UI, reload, and push to input if needed
         .alert("🎉 Welcome to Social Mode!", isPresented: $showModeChangeAlert) {
