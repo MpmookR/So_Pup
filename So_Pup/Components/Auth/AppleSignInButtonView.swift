@@ -7,11 +7,11 @@ struct AppleSignInButtonView: View {
 
     
     var body: some View {
-        SignInWithAppleButton(
+        AuthenticationServices.SignInWithAppleButton(
             .continue,
             onRequest: { request in
                 print("Apple Sign In: Request started")
-
+                
                 let nonce = randomNonceString()
                 currentNonce = nonce
                 request.requestedScopes = [.fullName, .email]
@@ -19,7 +19,7 @@ struct AppleSignInButtonView: View {
             },
             onCompletion: { result in
                 print("Apple Sign In: Completion triggered")
-
+                
                 switch result {
                 case .success(let authResults):
                     if let appleIDCredential = authResults.credential as? ASAuthorizationAppleIDCredential,
@@ -40,5 +40,9 @@ struct AppleSignInButtonView: View {
         .signInWithAppleButtonStyle(.black)
         .frame(height: 44)
         .cornerRadius(21)
+        .contentShape(Rectangle())
+//        .onTapGesture {
+//            print("🟡 Apple button tapped (SwiftUI gesture)")
+//        }
     }
 }

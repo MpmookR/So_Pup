@@ -98,7 +98,7 @@ struct SignInView: View {
                 Spacer() // ← keep the spacer here, inside the VStack
             }
             .padding()
-            .onTapGesture { hideKeyboard() }
+//            .onTapGesture { hideKeyboard() }
             .navigationBarBackButtonHidden(true)
             .navigationBarHidden(true)
             .onAppear {

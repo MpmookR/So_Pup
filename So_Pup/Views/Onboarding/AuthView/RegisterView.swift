@@ -59,8 +59,8 @@ struct RegisterView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
-                .onTapGesture { hideKeyboard() }
-                
+//                .onTapGesture { hideKeyboard() }
+        
             }
         }
     }
