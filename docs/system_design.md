@@ -1,9 +1,7 @@
-# 📐 SoPup: System Design (Deep Dive)
+# 📐 SoPup: System Design
 
 This document provides a deeper technical view of SoPup’s architecture and core workflows:
 **authentication + onboarding**, **location-based discovery**, **matchmaking**, **chat + meet-ups**, and **post-meetup reviews**.
-
----
 
 ## System Overview
 
@@ -23,12 +21,9 @@ This document provides a deeper technical view of SoPup’s architecture and cor
 - **FCM** for push notifications
 - **Core Location** for distance-based discovery
 
-> Diagram (overview):
 <p align="center">
   <img src="images/SimpleSystemDiagram.jpg" width="800" alt="SoPup High-Level System Diagram" />
 </p>
-
----
 
 ## Key Components
 
@@ -130,7 +125,7 @@ The client diagram specifies the organization of SoPup’s iOS app components th
 
 ## Algorithmic Design
 
-- **Filter Persistence & Application** (SwiftData, SwiftUI)
+### Filter Persistence & Application (SwiftData, SwiftUI)
 
 <p align="center">
   <img src="images/FrontendAlgorithmicDesign.png" width="800" alt="Frontend Algorithmic Design" />
@@ -138,7 +133,7 @@ The client diagram specifies the organization of SoPup’s iOS app components th
 
 Keep user filter choices persistently while letting the UI and the scoring backend work with clean, enum-rich data.
 
-- **Score and Sort Matches** (Backend)
+### Score and Sort Matches (Backend)
 
 <p align="center">
   <img src="images/newBackendAlgorithmDesign.png" width="800" alt="Backend Algorithmic Design" />
@@ -161,19 +156,19 @@ ranked by compatibility and proximity.
   <img src="images/puppymodeflow.png" width="800" alt="Puppy mode flow" />
 </p>
 
-- **(Try Puppy Mode On Figma)[https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=0%3A1&node-id=10-712&p=f&viewport=251%2C420%2C0.16&t=zwTlTtJvuDaSJVEi-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=10%3A712]**
+🔸 **[Try Puppy Mode On Figma](https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=0%3A1&node-id=10-712&p=f&viewport=251%2C420%2C0.16&t=XrOfr5vW7gh56Mzd-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=10%3A712)**
 
 ### Social Mode Flow
 <p align="center">
   <img src="images/Socialmodeflow.png" width="800" alt="Social mode flow" />
 </p>
 
-- **(Try Social Mode On Figma)[https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=111%3A1833&node-id=111-1834&viewport=313%2C305%2C0.14&t=dBB2LbexYm78ETOl-1&scaling=scale-down&content-scaling=fixed]**
+🔸 **[Try Social Mode On Figma](https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=111%3A1833&node-id=111-1834&viewport=313%2C305%2C0.14&t=dBB2LbexYm78ETOl-1&scaling=scale-down&content-scaling=fixed)**
 
 ---
 
 ## Repository Links
 🌐 **[Demo & Case Study](https://mpmookr.wixsite.com/mysite/sopup)**
-🍎 **[iOS App](https://github.com/MpmookR/So_Pup)**
+🍎 **[Frontend iOS](https://github.com/MpmookR/So_Pup)**
 📦 **[Backend (Cloud Functions/Firebase)](https://github.com/MpmookR/SoPup_CloudFucntion)**
 ⚙️ **[TestFlight](https://testflight.apple.com/join/duM8Wv9Q)**
