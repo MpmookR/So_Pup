@@ -3,13 +3,11 @@
 This project was developed as part of an **MSc in Software Engineering** and focuses on **clean iOS architecture, real-time systems, and scalable backend design.**
 
 ## 🔗 Related link
-🌐 **[Demo & Case Study](https://mpmookr.wixsite.com/mysite/sopup)**
-- The portfolio contains full UX flows, videos, system diagrams, and design decisions.
-
-📦 **[Backend (Cloud Functions/Firebase)](https://github.com/MpmookR/SoPup_CloudFucntion)**
-⚙️ **[TestFlight](https://testflight.apple.com/join/duM8Wv9Q)**
-🔸 **[Try Puppy Mode On Figma](https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=0%3A1&node-id=10-712&p=f&viewport=251%2C420%2C0.16&t=XrOfr5vW7gh56Mzd-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=10%3A712)**
-🔸 **[Try Social Mode On Figma](https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=111%3A1833&node-id=111-1834&viewport=313%2C305%2C0.14&t=dBB2LbexYm78ETOl-1&scaling=scale-down&content-scaling=fixed)**
+- 🌐 **[Demo & Case Study](https://mpmookr.wixsite.com/mysite/sopup)**
+- 📦 **[Backend (Cloud Functions/Firebase)](https://github.com/MpmookR/SoPup_CloudFucntion)**
+- ⚙️ **[TestFlight](https://testflight.apple.com/join/duM8Wv9Q)**
+- 🔸 **[Try Puppy Mode On Figma](https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=0%3A1&node-id=10-712&p=f&viewport=251%2C420%2C0.16&t=XrOfr5vW7gh56Mzd-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=10%3A712)**
+- 🔸 **[Try Social Mode On Figma](https://www.figma.com/proto/cxcrc0qeORVgLmnGKOeDhn/SoPup?page-id=111%3A1833&node-id=111-1834&viewport=313%2C305%2C0.14&t=dBB2LbexYm78ETOl-1&scaling=scale-down&content-scaling=fixed)**
 
 ---
 
